@@ -2,8 +2,6 @@
 
 import { Flower } from "lucide-react";
 import { ChartSplineIcon } from "@/components/animate-ui/icons/chart-spline";
-import { GalleryVerticalEnd } from "@/components/animate-ui/icons/gallery-horizontal-end";
-import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
 import { List } from "@/components/animate-ui/icons/list";
 import { MessageSquareHeart } from "@/components/animate-ui/icons/message-square-heart";
 import { SparklesIcon } from "@/components/animate-ui/icons/sparkles";

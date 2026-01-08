@@ -47,6 +47,8 @@ export default function RootLayout({
           {
             "--sidebar-width": "calc(var(--spacing) * 72)",
             "--dashboard-header-height": "calc(var(--spacing) * 12)",
+            "--dashboard-header-height-with-margin":
+              "calc(var(--spacing) * 12 + var(--spacing) * 4)",
           } as React.CSSProperties
         }
       >
