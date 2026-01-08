@@ -1,5 +1,12 @@
 "use client";
-import { type LucideIcon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+
+import {
+  type LucideIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +22,12 @@ interface IResponsiveBlock {
   icon?: LucideIcon;
   description?: string;
   cardContent: ReactNode;
+  minimizable?: boolean;
   isMinimized?: boolean;
+  minimizeDirection?: "left" | "right";
   onToggle?: () => void;
+  className?: string;
+  headerAction?: ReactNode;
 }
 
 export const ResponsiveBlock = ({
@@ -24,8 +35,12 @@ export const ResponsiveBlock = ({
   icon: Icon,
   description,
   cardContent,
+  minimizable = false,
   isMinimized: controlledIsMinimized,
+  minimizeDirection = "left",
   onToggle,
+  className,
+  headerAction,
 }: IResponsiveBlock) => {
   const [internalIsMinimized, setInternalIsMinimized] = useState(false);
 
@@ -42,11 +57,21 @@ export const ResponsiveBlock = ({
     }
   };
 
+  const ToggleIcon = (() => {
+    if (minimizeDirection === "left") {
+      return isMinimized ? PanelLeftOpen : PanelLeftClose;
+    }
+
+    // right
+    return isMinimized ? PanelRightOpen : PanelRightClose;
+  })();
+
   return (
     <Card
       className={cn(
-        "h-full transition-all duration-300 ease-in-out",
-        isMinimized ? "w-fit min-w-16" : "w-full"
+        "h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+        isMinimized ? "w-fit min-w-16" : "w-full",
+        className
       )}
     >
       <CardHeader className={cn("border-b")}>
@@ -61,14 +86,17 @@ export const ResponsiveBlock = ({
             </div>
           )}
 
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleToggle}
-            className={cn("shrink-0", isMinimized && "mx-auto")}
-          >
-            {isMinimized ? <PanelLeftClose /> : <PanelLeftOpen />}
-          </Button>
+          {headerAction && <div className="ml-auto">{headerAction}</div>}
+          {minimizable && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleToggle}
+              className={cn("shrink-0", isMinimized && "mx-auto")}
+            >
+              <ToggleIcon />
+            </Button>
+          )}
         </div>
       </CardHeader>
       {cardContent}

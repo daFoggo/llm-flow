@@ -1,34 +1,46 @@
-"use client";
-
 import { BookSearch } from "lucide-react";
-import { useState } from "react";
+
 import { CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { AddSourcesDialog } from "./add-sources-dialog";
 import { DocumentList } from "./document-list";
 import { ResponsiveBlock } from "./responsive-block";
 
-export const DocumentsManagementBlock = () => {
-  const [isMinimized, setIsMinimized] = useState(false);
+interface IDocumentsManagementCardContentProps {
+  isMinimized: boolean;
+}
+
+interface IDocumentsManagementBlockProps {
+  isMinimized?: boolean;
+  onToggle?: () => void;
+  className?: string;
+}
+
+export const DocumentsManagementBlock = ({
+  isMinimized = false,
+  onToggle,
+  className,
+}: IDocumentsManagementBlockProps) => {
+  const contextAction = null;
 
   return (
     <ResponsiveBlock
       title="Documents"
       icon={BookSearch}
+      minimizable
       isMinimized={isMinimized}
-      onToggle={() => setIsMinimized((prev) => !prev)}
+      minimizeDirection="left"
+      onToggle={onToggle}
+      className={className}
+      headerAction={contextAction}
       cardContent={<DocumentsManagementCardContent isMinimized={isMinimized} />}
     />
   );
 };
 
-interface DocumentsManagementCardContentProps {
-  isMinimized: boolean;
-}
-
 const DocumentsManagementCardContent = ({
   isMinimized,
-}: DocumentsManagementCardContentProps) => {
+}: IDocumentsManagementCardContentProps) => {
   return (
     <CardContent
       className={cn(

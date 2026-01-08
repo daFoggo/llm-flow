@@ -1,13 +1,7 @@
 "use client";
 
 import { truncate } from "lodash";
-import {
-  EllipsisVertical,
-  File,
-  FileText,
-  Link2,
-  type LucideIcon,
-} from "lucide-react";
+import { EllipsisVertical, FileText } from "lucide-react";
 
 import {
   Tooltip,
@@ -30,6 +24,7 @@ import {
 import { FieldLabel } from "@/components/ui/field";
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemGroup,
   ItemMedia,
@@ -37,26 +32,13 @@ import {
 } from "@/components/ui/item";
 import { useDocuments } from "@/features/chat-models/hooks/use-documents";
 import { cn } from "@/lib/utils";
-import type { IDocumentItem } from "../types/document.type";
+import { getIconForType } from "../utils/document";
 
-const getIconForType = (type: IDocumentItem["type"]): LucideIcon => {
-  switch (type) {
-    case "link":
-      return Link2;
-    case "text":
-      return FileText;
-    case "file":
-      return File;
-    default:
-      return File;
-  }
-};
-
-interface DocumentListProps {
+interface IDocumentListProps {
   isMinimized?: boolean;
 }
 
-export const DocumentList = ({ isMinimized }: DocumentListProps) => {
+export const DocumentList = ({ isMinimized }: IDocumentListProps) => {
   const { documents, toggleSelection, toggleAll } = useDocuments();
 
   const allSelected =
@@ -85,16 +67,21 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
         <ItemGroup>
           {documents.length > 0 && !isMinimized && (
             <Item>
-              <div className="flex items-center justify-between w-full gap-2">
-                <FieldLabel htmlFor="select-all" className="cursor-pointer">
-                  Select All
-                </FieldLabel>
-                <Checkbox
-                  id="select-all"
-                  checked={allSelected}
-                  onCheckedChange={(checked) => toggleAll(checked === true)}
-                />
-              </div>
+              <ItemContent className="flex-">
+                <ItemTitle>Total documents: {documents.length}</ItemTitle>
+              </ItemContent>
+              <ItemActions>
+                <div className="flex items-center gap-2">
+                  <FieldLabel htmlFor="select-all" className="cursor-pointer">
+                    Select All
+                  </FieldLabel>
+                  <Checkbox
+                    id="select-all"
+                    checked={allSelected}
+                    onCheckedChange={(checked) => toggleAll(checked === true)}
+                  />
+                </div>
+              </ItemActions>
             </Item>
           )}
           {documents.map((doc) => {

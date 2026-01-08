@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   domain: "llm-flow.vercel.app",
   url: isDev ? "http://localhost:3000" : "https://llm-flow.vercel.app",
   github: {
-    name: "llm-flow",
+    name: "daFoggo",
     repo: "llm-flow",
     url: "https://github.com/daFoggo/llm-flow",
   },

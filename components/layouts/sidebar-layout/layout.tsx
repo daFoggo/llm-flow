@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -22,8 +24,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/animate-ui/primitives/radix/collapsible";
 import type { ISidebarLayoutProps } from "@/lib/types/sidebar.types";
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
 
 export const SidebarLayout = ({
   children,
@@ -93,7 +93,7 @@ export const SidebarLayout = ({
         {footer && <SidebarFooter>{footer}</SidebarFooter>}
       </Sidebar>
 
-      <SidebarInset>{children}</SidebarInset>
+      <SidebarInset className="overflow-hidden">{children}</SidebarInset>
     </SidebarProvider>
   );
 };
