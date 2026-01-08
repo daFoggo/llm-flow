@@ -34,11 +34,11 @@ import { useDocuments } from "@/features/chat-models/hooks/use-documents";
 import { cn } from "@/lib/utils";
 import { getIconForType } from "../utils/document";
 
-interface IDocumentListProps {
+type DocumentListProps = {
   isMinimized?: boolean;
-}
+};
 
-export const DocumentList = ({ isMinimized }: IDocumentListProps) => {
+export const DocumentList = ({ isMinimized }: DocumentListProps) => {
   const { documents, toggleSelection, toggleAll } = useDocuments();
 
   const allSelected =
@@ -59,7 +59,7 @@ export const DocumentList = ({ isMinimized }: IDocumentListProps) => {
             </EmptyMedia>
             <EmptyTitle>No documents added</EmptyTitle>
             <EmptyDescription>
-              Add documents to start chatting with your data.
+              Click "Add documents" to start diving into your data.
             </EmptyDescription>
           </Empty>
         )

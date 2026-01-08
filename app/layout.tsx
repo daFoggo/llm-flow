@@ -1,12 +1,9 @@
-import { TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
-import { DynamicClerkProvider } from "@/components/common/dynamic-clerk-provider";
-import { ThemeProvider } from "@/components/common/theme-provider";
-
-import "@clerk/themes/shadcn.css";
 import type { Metadata } from "next";
 import { Google_Sans, Google_Sans_Code } from "next/font/google";
-import "./globals.css";
+import { TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
+import { ThemeProvider } from "@/components/common/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -34,11 +31,11 @@ export const metadata: Metadata = {
     "A Next.js shadcn/ui base project for kickstarting your next web application with a modern tech stack, beautiful components, and developer-friendly setup.",
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -58,12 +55,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <DynamicClerkProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-            <Toaster />
-          </DynamicClerkProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

@@ -1,21 +1,21 @@
+import type { ReactNode } from "react";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/animate-ui/components/radix/sidebar";
 import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
-import type { ReactNode } from "react";
 
-interface ISidebarSiteHeaderProps {
+type SidebarSiteHeaderProps = {
   logo?: ReactNode;
   title: string;
   subtitle?: string;
-}
+};
 export const SidebarSiteHeader = ({
   logo,
   title,
   subtitle,
-}: ISidebarSiteHeaderProps) => {
+}: SidebarSiteHeaderProps) => {
   return (
     <SidebarMenu>
       <SidebarMenuItem>

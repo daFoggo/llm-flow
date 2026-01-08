@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronsUpDown, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,20 +16,19 @@ import {
   SidebarMenuItem,
 } from "@/components/animate-ui/components/radix/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { ITeam } from "@/lib/types/team.types";
-import { ChevronsUpDown, Plus } from "lucide-react";
+import type { Team } from "@/lib/types/team.types";
 
-interface ISidebarTeamSwitcherProps {
-  teams: ITeam[];
-  activeTeam: ITeam;
-  onTeamChange: (team: ITeam) => void;
-}
+type SidebarTeamSwitcherProps = {
+  teams: Team[];
+  activeTeam: Team;
+  onTeamChange: (team: Team) => void;
+};
 
 export const SidebarTeamSwitcher = ({
   teams,
   activeTeam,
   onTeamChange,
-}: ISidebarTeamSwitcherProps) => {
+}: SidebarTeamSwitcherProps) => {
   const isMobile = useIsMobile();
 
   return (

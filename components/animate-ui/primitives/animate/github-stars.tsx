@@ -1,25 +1,24 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { motion, type HTMLMotionProps } from 'motion/react';
-
+import { type HTMLMotionProps, motion } from "motion/react";
+import * as React from "react";
 import {
-  useIsInView,
-  type UseIsInViewOptions,
-} from '@/hooks/use-is-in-view';
-import { getStrictContext } from '@/lib/get-strict-context';
-import { Slot, type WithAsChild } from '@/components/animate-ui/primitives/animate/slot';
-import {
-  SlidingNumber,
-  type SlidingNumberProps,
-} from '@/components/animate-ui/primitives/texts/sliding-number';
+  Slot,
+  type WithAsChild,
+} from "@/components/animate-ui/primitives/animate/slot";
 import {
   Particles,
   ParticlesEffect,
   type ParticlesEffectProps,
-} from '@/components/animate-ui/primitives/effects/particles';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+} from "@/components/animate-ui/primitives/effects/particles";
+import {
+  SlidingNumber,
+  type SlidingNumberProps,
+} from "@/components/animate-ui/primitives/texts/sliding-number";
+import { Skeleton } from "@/components/ui/skeleton";
+import { type UseIsInViewOptions, useIsInView } from "@/hooks/use-is-in-view";
+import { getStrictContext } from "@/lib/get-strict-context";
+import { cn } from "@/lib/utils";
 
 type GithubStarsContextType = {
   stars: number;
@@ -31,7 +30,7 @@ type GithubStarsContextType = {
 };
 
 const [GithubStarsProvider, useGithubStars] =
-  getStrictContext<GithubStarsContextType>('GithubStarsContext');
+  getStrictContext<GithubStarsContextType>("GithubStarsContext");
 
 type GithubStarsProps = WithAsChild<
   {
@@ -41,7 +40,7 @@ type GithubStarsProps = WithAsChild<
     value?: number;
     delay?: number;
   } & UseIsInViewOptions &
-  HTMLMotionProps<'div'>
+    HTMLMotionProps<"div">
 >;
 
 function GithubStars({
@@ -52,14 +51,14 @@ function GithubStars({
   value,
   delay = 0,
   inView = false,
-  inViewMargin = '0px',
+  inViewMargin = "0px",
   inViewOnce = true,
   asChild = false,
   ...props
 }: GithubStarsProps) {
   const { ref: localRef, isInView } = useIsInView(
     ref as React.Ref<HTMLDivElement>,
-    { inView, inViewOnce, inViewMargin },
+    { inView, inViewOnce, inViewMargin }
   );
 
   const [stars, setStars] = React.useState(value ?? 0);
@@ -67,7 +66,7 @@ function GithubStars({
   const [isLoading, setIsLoading] = React.useState(true);
   const isCompleted = React.useMemo(
     () => currentStars === stars,
-    [currentStars, stars],
+    [currentStars, stars]
   );
 
   const Component = asChild ? Slot : motion.div;
@@ -84,7 +83,7 @@ function GithubStars({
       fetch(`https://api.github.com/repos/${username}/${repo}`)
         .then((response) => response.json())
         .then((data) => {
-          if (data && typeof data.stargazers_count === 'number') {
+          if (data && typeof data.stargazers_count === "number") {
             setStars(data.stargazers_count);
           }
         })
@@ -107,7 +106,7 @@ function GithubStars({
       }}
     >
       {isLoading ? (
-        <Skeleton className={cn('h-8 w-20', props.className)} />
+        <Skeleton className={cn("h-8 w-20", props.className)} />
       ) : (
         <Component ref={localRef} {...props}>
           {children}
@@ -117,7 +116,7 @@ function GithubStars({
   );
 }
 
-type GithubStarsNumberProps = Omit<SlidingNumberProps, 'number' | 'fromNumber'>;
+type GithubStarsNumberProps = Omit<SlidingNumberProps, "number" | "fromNumber">;
 
 function GithubStarsNumber({
   padStart = true,
@@ -144,7 +143,7 @@ type GithubStarsIconProps<T extends React.ElementType> = {
 
 function GithubStarsIcon<T extends React.ElementType>({
   icon: Icon,
-  color = 'currentColor',
+  color = "currentColor",
   activeClassName,
   className,
   ...props
@@ -153,17 +152,19 @@ function GithubStarsIcon<T extends React.ElementType>({
   const fillPercentage = (currentStars / stars) * 100;
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: "relative" }}>
       <Icon aria-hidden="true" className={cn(className)} {...props} />
       <Icon
         aria-hidden="true"
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           fill: color,
           stroke: color,
-          clipPath: `inset(${100 - (isCompleted ? fillPercentage : fillPercentage - 10)}% 0 0 0)`,
+          clipPath: `inset(${
+            100 - (isCompleted ? fillPercentage : fillPercentage - 10)
+          }% 0 0 0)`,
         }}
         className={cn(className, activeClassName)}
         {...props}
@@ -190,8 +191,8 @@ function GithubStarsParticles({
       {children}
       <ParticlesEffect
         style={{
-          backgroundColor: 'currentcolor',
-          borderRadius: '50%',
+          backgroundColor: "currentcolor",
+          borderRadius: "50%",
           width: size,
           height: size,
           ...style,

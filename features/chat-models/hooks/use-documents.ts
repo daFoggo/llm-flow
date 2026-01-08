@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { IDocumentItem } from "../types/document.type";
+import type { DocumentItem } from "../types/document.type";
 
 const STORAGE_KEY = "chat-model-documents";
 const EVENT_KEY = "documents-updated";
 
 export const useDocuments = () => {
-  const [documents, setDocuments] = useState<IDocumentItem[]>([]);
+  const [documents, setDocuments] = useState<DocumentItem[]>([]);
 
   useEffect(() => {
     const loadDocuments = () => {
@@ -40,16 +40,16 @@ export const useDocuments = () => {
     };
   }, []);
 
-  const saveDocuments = (newDocs: IDocumentItem[]) => {
+  const saveDocuments = (newDocs: DocumentItem[]) => {
     setDocuments(newDocs);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newDocs));
     window.dispatchEvent(new Event(EVENT_KEY));
   };
 
   const addDocument = (
-    doc: Omit<IDocumentItem, "id" | "createdAt" | "isSelected">
+    doc: Omit<DocumentItem, "id" | "createdAt" | "isSelected">
   ) => {
-    const newDoc: IDocumentItem = {
+    const newDoc: DocumentItem = {
       ...doc,
       id: crypto.randomUUID(),
       createdAt: Date.now(),
@@ -60,7 +60,7 @@ export const useDocuments = () => {
   };
 
   const addDocuments = (
-    docs: Omit<IDocumentItem, "id" | "createdAt" | "isSelected">[]
+    docs: Omit<DocumentItem, "id" | "createdAt" | "isSelected">[]
   ) => {
     const newDocs = docs.map((doc) => ({
       ...doc,
@@ -93,7 +93,7 @@ export const useDocuments = () => {
     saveDocuments(updated);
   };
 
-  const updateDocument = (id: string, updates: Partial<IDocumentItem>) => {
+  const updateDocument = (id: string, updates: Partial<DocumentItem>) => {
     const updated = documents.map((doc) =>
       doc.id === id ? { ...doc, ...updates } : doc
     );

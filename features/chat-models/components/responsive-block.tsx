@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface IResponsiveBlock {
+type ResponsiveBlockProps = {
   title: string;
   icon?: LucideIcon;
   description?: string;
@@ -28,7 +28,7 @@ interface IResponsiveBlock {
   onToggle?: () => void;
   className?: string;
   headerAction?: ReactNode;
-}
+};
 
 export const ResponsiveBlock = ({
   title,
@@ -41,7 +41,7 @@ export const ResponsiveBlock = ({
   onToggle,
   className,
   headerAction,
-}: IResponsiveBlock) => {
+}: ResponsiveBlockProps) => {
   const [internalIsMinimized, setInternalIsMinimized] = useState(false);
 
   const isControlled = controlledIsMinimized !== undefined;

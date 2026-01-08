@@ -31,11 +31,11 @@ import { cn } from "@/lib/utils";
 import { DocumentInputForm } from "./document-input-form";
 import { UploadDocuments } from "./upload-documents";
 
-interface IAddSourcesDialogProps {
+type AddSourcesDialogProps = {
   isMinimized?: boolean;
-}
+};
 
-export const AddSourcesDialog = ({ isMinimized }: IAddSourcesDialogProps) => {
+export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("file");
   const [linkContent, setLinkContent] = useState("");

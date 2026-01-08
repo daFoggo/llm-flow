@@ -14,11 +14,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SITE_CONFIG } from "@/configs/site";
 
-interface IDashboardHeaderProps {
+type DashboardHeaderProps = {
   breadcrumbs?: ReactNode;
-}
+};
 
-export const DashboardHeader = ({ breadcrumbs }: IDashboardHeaderProps) => {
+export const DashboardHeader = ({ breadcrumbs }: DashboardHeaderProps) => {
   return (
     <header className="flex h-(--dashboard-header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--dashboard-header-height)">
       <div className="flex items-center gap-1 lg:gap-2 px-4 lg:px-6 w-full">

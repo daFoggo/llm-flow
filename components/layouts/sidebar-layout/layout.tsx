@@ -23,7 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/animate-ui/primitives/radix/collapsible";
-import type { ISidebarLayoutProps } from "@/lib/types/sidebar.types";
+import type { SidebarLayoutProps } from "@/lib/types/sidebar.types";
 
 export const SidebarLayout = ({
   children,
@@ -31,7 +31,7 @@ export const SidebarLayout = ({
   header,
   footer,
   navigation,
-}: ISidebarLayoutProps) => {
+}: SidebarLayoutProps) => {
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon" variant={variant}>

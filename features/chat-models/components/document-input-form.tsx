@@ -1,19 +1,19 @@
 import { Field, FieldDescription } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 
-interface IDocumentInputFormProps {
+type DocumentInputFormProps = {
   inputType: "link" | "text";
   value: string;
   onChange: (value: string) => void;
   error?: string | null;
-}
+};
 
 export function DocumentInputForm({
   inputType,
   value,
   onChange,
   error,
-}: IDocumentInputFormProps) {
+}: DocumentInputFormProps) {
   return (
     <div className="space-y-4 w-full">
       <Field data-invalid={!!error}>

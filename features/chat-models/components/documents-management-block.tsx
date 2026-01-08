@@ -6,21 +6,21 @@ import { AddSourcesDialog } from "./add-sources-dialog";
 import { DocumentList } from "./document-list";
 import { ResponsiveBlock } from "./responsive-block";
 
-interface IDocumentsManagementCardContentProps {
+type DocumentsManagementCardContentProps = {
   isMinimized: boolean;
-}
+};
 
-interface IDocumentsManagementBlockProps {
+type DocumentsManagementBlockProps = {
   isMinimized?: boolean;
   onToggle?: () => void;
   className?: string;
-}
+};
 
 export const DocumentsManagementBlock = ({
   isMinimized = false,
   onToggle,
   className,
-}: IDocumentsManagementBlockProps) => {
+}: DocumentsManagementBlockProps) => {
   const contextAction = null;
 
   return (
@@ -40,7 +40,7 @@ export const DocumentsManagementBlock = ({
 
 const DocumentsManagementCardContent = ({
   isMinimized,
-}: IDocumentsManagementCardContentProps) => {
+}: DocumentsManagementCardContentProps) => {
   return (
     <CardContent
       className={cn(

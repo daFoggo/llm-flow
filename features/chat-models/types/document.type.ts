@@ -1,4 +1,4 @@
-export interface IDocumentItem {
+export type DocumentItem = {
   id: string;
   type: "link" | "text" | "file";
   content: string; // URL for link, text content for text, filename for file
@@ -6,4 +6,4 @@ export interface IDocumentItem {
   size?: number; // Size in bytes
   createdAt: number;
   isSelected: boolean;
-}
+};

@@ -1,7 +1,7 @@
 import ky from "ky";
 
 export const kyClient = ky.create({
-  prefixUrl: process.env.NEXT_PUBLIC_API_URL, // optional
+  prefixUrl: process.env.NEXT_PUBLIC_BACKEND_API,
   timeout: 30_000,
   retry: {
     limit: 2,
@@ -11,11 +11,17 @@ export const kyClient = ky.create({
   hooks: {
     beforeRequest: [
       async (request) => {
-        // Inject token nếu có
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("ACCESS_TOKEN")
-            : null;
+        let token: string | undefined | null;
+
+        if (typeof window !== "undefined") {
+          // Client side: get from localStorage
+          token = localStorage.getItem("access_token");
+        } else {
+          // Server side: dynamically import cookies
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          token = cookieStore.get("access_token")?.value;
+        }
 
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`);

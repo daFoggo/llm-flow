@@ -42,13 +42,13 @@ import { CardContent } from "@/components/ui/card";
 import { useDocuments } from "../hooks/use-documents";
 import { ResponsiveBlock } from "./responsive-block";
 
-interface IConversationManagementBlockProps {
+type ConversationManagementBlockProps = {
   className?: string;
-}
+};
 
 export const ConversationManagementBlock = ({
   className,
-}: IConversationManagementBlockProps) => {
+}: ConversationManagementBlockProps) => {
   const contextAction = (
     <Context
       usedTokens={8192}
@@ -139,18 +139,16 @@ const ConversationManagementCardContent = () => {
             "I've received your request. Using the attached documents, I'll analyze the information and provide a detailed response shortly.",
         },
       ]);
-    }, 1500);
+    }, 500);
   };
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of messages
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Auto-scroll triggers on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, []);
 
   return (
     <CardContent className="flex flex-col gap-4 p-0 h-full overflow-hidden">

@@ -18,11 +18,11 @@ import {
   FileUploadTrigger,
 } from "@/components/ui/file-upload";
 
-interface IUploadDocumentsProps {
+type UploadDocumentsProps = {
   onUploadSuccess?: (file: File) => void;
-}
+};
 
-export const UploadDocuments = ({ onUploadSuccess }: IUploadDocumentsProps) => {
+export const UploadDocuments = ({ onUploadSuccess }: UploadDocumentsProps) => {
   const MAX_ALLOWED_FILES = 10;
   const MAX_VISIBLE_FILES = 3;
   const MAX_FILE_SIZE_MB = 100;

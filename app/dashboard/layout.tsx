@@ -11,10 +11,10 @@ import {
   SidebarUserMenu,
 } from "@/components/layouts/sidebar-layout";
 import { SITE_CONFIG } from "@/configs/site";
-import type { ISidebarNavItem } from "@/lib/types/sidebar.types";
+import type { SidebarNavItem } from "@/lib/types/sidebar.types";
 import { DashboardHeader } from "./components/dashboard-header";
 
-const NAVIGATION: ISidebarNavItem[] = [
+const NAVIGATION: SidebarNavItem[] = [
   {
     title: "Overview",
     url: "/dashboard/overview",
