@@ -1,37 +1,45 @@
 "use client";
 
-import { File, FileText, Link2, type LucideIcon, Trash2 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { Button } from "@/components/ui/button";
+import { truncate } from "lodash";
+import {
+  EllipsisVertical,
+  File,
+  FileText,
+  Link2,
+  type LucideIcon,
+} from "lucide-react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/animate-ui/components/animate/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Field,
-  FieldContent,
-  FieldLabel,
-  FieldSet,
-} from "@/components/ui/field";
+import { FieldLabel } from "@/components/ui/field";
 import {
   Item,
-  ItemActions,
   ItemContent,
-  ItemDescription,
   ItemGroup,
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import {
-  type DocumentItem,
-  useDocuments,
-} from "@/features/chat-models/hooks/use-documents";
+import { useDocuments } from "@/features/chat-models/hooks/use-documents";
+import { cn } from "@/lib/utils";
+import type { IDocumentItem } from "../types/document.type";
 
-const getIconForType = (type: DocumentItem["type"]): LucideIcon => {
+const getIconForType = (type: IDocumentItem["type"]): LucideIcon => {
   switch (type) {
     case "link":
       return Link2;
@@ -44,121 +52,118 @@ const getIconForType = (type: DocumentItem["type"]): LucideIcon => {
   }
 };
 
-const formatSize = (bytes?: number) => {
-  if (bytes === undefined) return "";
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
-};
+interface DocumentListProps {
+  isMinimized?: boolean;
+}
 
-export const DocumentList = () => {
-  const { documents, removeDocument, toggleSelection, toggleAll } =
-    useDocuments();
+export const DocumentList = ({ isMinimized }: DocumentListProps) => {
+  const { documents, toggleSelection, toggleAll } = useDocuments();
 
   const allSelected =
     documents.length > 0 && documents.every((d) => d.isSelected);
-  const isIndeterminate = documents.some((d) => d.isSelected) && !allSelected;
 
   return (
-    <FieldSet>
-      <Field>
-        <div className="flex justify-between items-center">
-          <FieldLabel>Documents</FieldLabel>
-          <div className="flex items-center gap-2 mb-2 px-1">
-            <Checkbox
-              id="select-all"
-              checked={
-                allSelected || (isIndeterminate ? "indeterminate" : false)
-              }
-              onCheckedChange={(checked) => toggleAll(checked === true)}
-            />
-            <FieldLabel htmlFor="select-all" className="cursor-pointer">
-              Select All
-            </FieldLabel>
-          </div>
-        </div>
-        <FieldContent>
-          <AnimatePresence mode="popLayout" initial={false}>
-            {documents.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
+    <div
+      className={cn(
+        "flex flex-col gap-4 flex-1 overflow-y-auto min-h-0",
+        isMinimized && "gap-2"
+      )}
+    >
+      {documents.length === 0 ? (
+        !isMinimized && (
+          <Empty className="border-border bg-background/50">
+            <EmptyMedia>
+              <FileText className="text-muted-foreground" />
+            </EmptyMedia>
+            <EmptyTitle>No documents added</EmptyTitle>
+            <EmptyDescription>
+              Add documents to start chatting with your data.
+            </EmptyDescription>
+          </Empty>
+        )
+      ) : (
+        <ItemGroup>
+          {documents.length > 0 && !isMinimized && (
+            <Item>
+              <div className="flex items-center justify-between w-full gap-2">
+                <FieldLabel htmlFor="select-all" className="cursor-pointer">
+                  Select All
+                </FieldLabel>
+                <Checkbox
+                  id="select-all"
+                  checked={allSelected}
+                  onCheckedChange={(checked) => toggleAll(checked === true)}
+                />
+              </div>
+            </Item>
+          )}
+          {documents.map((doc) => {
+            const Icon = getIconForType(doc.type);
+
+            const ItemComponent = (
+              <Item
+                key={doc.id}
+                className={cn(
+                  "group/item transition-all",
+                  isMinimized && "border-0 p-0 shadow-none hover:bg-transparent"
+                )}
               >
-                <Empty className="border-border bg-background/50">
-                  <EmptyMedia>
-                    <FileText className="text-muted-foreground" />
-                  </EmptyMedia>
-                  <EmptyTitle>No documents added</EmptyTitle>
-                  <EmptyDescription>
-                    Add documents to start chatting with your data.
-                  </EmptyDescription>
-                </Empty>
-              </motion.div>
-            ) : (
-              <ItemGroup>
-                {documents.map((doc) => {
-                  const Icon = getIconForType(doc.type);
-                  return (
-                    <motion.div
-                      key={doc.id}
-                      layout
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{
-                        opacity: 0,
-                        scale: 0.95,
-                        transition: { duration: 0.2 },
-                      }}
-                    >
-                      <Item>
-                        <Checkbox
-                          className="mr-2"
-                          checked={doc.isSelected}
-                          onCheckedChange={(checked) =>
-                            toggleSelection(doc.id, checked === true)
-                          }
-                        />
-                        <ItemMedia>
-                          <Icon />
+                {!isMinimized ? (
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <ItemMedia className="cursor-pointer">
+                          <Icon className="group-hover/item:hidden" />
+                          <EllipsisVertical className="hidden group-hover/item:block" />
                         </ItemMedia>
-                        <ItemContent>
-                          <ItemTitle>{doc.name || doc.content}</ItemTitle>
-                          <ItemDescription>
-                            {doc.type === "link" ? (
-                              doc.content
-                            ) : (
-                              <>
-                                {doc.type.toUpperCase()} •{" "}
-                                {formatSize(doc.size)}
-                              </>
-                            )}
-                          </ItemDescription>
-                        </ItemContent>
-                        <ItemActions>
-                          <AnimateIcon animateOnHover>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => removeDocument(doc.id)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          </AnimateIcon>
-                        </ItemActions>
-                      </Item>
-                    </motion.div>
-                  );
-                })}
-              </ItemGroup>
-            )}
-          </AnimatePresence>
-        </FieldContent>
-      </Field>
-    </FieldSet>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem>Change name</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <ItemContent>
+                      <ItemTitle className="line-clamp-1">
+                        {truncate(doc.name || doc.content)}
+                      </ItemTitle>
+                    </ItemContent>
+
+                    <Checkbox
+                      className="shrink-0"
+                      checked={doc.isSelected}
+                      onCheckedChange={(checked) =>
+                        toggleSelection(doc.id, checked === true)
+                      }
+                    />
+                  </>
+                ) : (
+                  <div className="flex justify-center w-full">
+                    <div className="relative flex items-center justify-center p-2 rounded-md hover:bg-accent/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors">
+                      <Icon className="size-5" />
+                    </div>
+                  </div>
+                )}
+              </Item>
+            );
+
+            if (isMinimized) {
+              return (
+                <Tooltip side="right" key={doc.id}>
+                  <TooltipTrigger asChild>{ItemComponent}</TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="truncate">{doc.name || doc.content}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return ItemComponent;
+          })}
+        </ItemGroup>
+      )}
+    </div>
   );
 };

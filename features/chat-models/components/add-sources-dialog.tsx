@@ -1,6 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { z } from "zod";
+import {
+  Tabs,
+  TabsContent,
+  TabsContents,
+  TabsList,
+  TabsTrigger,
+} from "@/components/animate-ui/components/animate/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/animate-ui/components/animate/tooltip";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { PlusIcon } from "@/components/animate-ui/icons/plus";
 import { Button } from "@/components/ui/button";
@@ -13,35 +26,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDocuments } from "@/features/chat-models/hooks/use-documents";
+import { cn } from "@/lib/utils";
 import { DocumentInputForm } from "./document-input-form";
 import { UploadDocuments } from "./upload-documents";
 
-export const AddSourcesDialog = () => {
+interface IAddSourcesDialogProps {
+  isMinimized?: boolean;
+}
+
+export const AddSourcesDialog = ({ isMinimized }: IAddSourcesDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("file");
+  const [linkContent, setLinkContent] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [errors, setErrors] = useState<string | null>(null);
   const { addDocuments, addDocument } = useDocuments();
 
-  const handleAddLinks = (newLinks: string[]) => {
-    addDocuments(
-      newLinks.map((link) => ({
-        type: "link",
-        content: link,
-        name: link,
-      }))
-    );
-    // Optional: show toast or close dialog? Keeping dialog open for more adds.
-  };
-
-  const handleAddText = (newText: string) => {
-    addDocuments([
-      {
-        type: "text",
-        content: newText,
-        name: "Text Snippet",
-        size: newText.length,
-      },
-    ]);
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset inputs when dialog closes
+      setTimeout(() => {
+        setLinkContent("");
+        setTextContent("");
+        setErrors(null);
+        setActiveTab("file");
+      }, 300);
+    }
   };
 
   const handleUploadSuccess = (file: File) => {
@@ -53,17 +65,83 @@ export const AddSourcesDialog = () => {
     });
   };
 
+  const linkSchema = z
+    .string()
+    .transform((val) =>
+      val
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+    )
+    .pipe(
+      z.array(z.string().url({ message: "Invalid URL format" })).min(1, {
+        message: "At least one valid URL is required",
+      })
+    );
+
+  const textSchema = z
+    .string()
+    .trim()
+    .min(1, { message: "Text content cannot be empty" });
+
+  const handleDone = () => {
+    setErrors(null);
+
+    try {
+      if (activeTab === "link") {
+        const links = linkSchema.parse(linkContent);
+        addDocuments(
+          links.map((link) => ({
+            type: "link",
+            content: link,
+            name: link,
+          }))
+        );
+      } else if (activeTab === "text") {
+        const content = textSchema.parse(textContent);
+        addDocuments([
+          {
+            type: "text",
+            content: content,
+            name: "Text Snippet",
+            size: content.length,
+          },
+        ]);
+      }
+      setOpen(false);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setErrors(error.issues[0].message);
+      }
+    }
+  };
+
+  const TriggerButton = (
+    <Button
+      className={cn("transition-all", isMinimized ? "size-10 p-0" : "w-full")}
+    >
+      <AnimateIcon animateOnHover={!isMinimized}>
+        <PlusIcon />
+      </AnimateIcon>
+      {!isMinimized && "Add documents"}
+    </Button>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <AnimateIcon animateOnHover>
-          <Button className="w-full">
-            <PlusIcon />
-            Add documents
-          </Button>
-        </AnimateIcon>
-      </DialogTrigger>
-      <DialogContent className="sm:min-w-2xl">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      {isMinimized ? (
+        <Tooltip side="right">
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>{TriggerButton}</DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Add documents</p>
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <DialogTrigger asChild>{TriggerButton}</DialogTrigger>
+      )}
+      <DialogContent className="sm:min-w-2xl flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Add documents</DialogTitle>
           <DialogDescription>
@@ -71,33 +149,46 @@ export const AddSourcesDialog = () => {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="file" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="file">File Upload</TabsTrigger>
-            <TabsTrigger value="link">Links</TabsTrigger>
-            <TabsTrigger value="text">Paste Text</TabsTrigger>
-          </TabsList>
-          <TabsContent value="file" className="mt-4">
-            <UploadDocuments onUploadSuccess={handleUploadSuccess} />
-          </TabsContent>
-          <TabsContent value="link" className="mt-4">
-            <DocumentInputForm
-              inputType="link"
-              onAddLinks={handleAddLinks}
-              onAddText={() => {}}
-            />
-          </TabsContent>
-          <TabsContent value="text" className="mt-4">
-            <DocumentInputForm
-              inputType="text"
-              onAddLinks={() => {}}
-              onAddText={handleAddText}
-            />
-          </TabsContent>
-        </Tabs>
+        <div className="flex-1 overflow-y-auto py-2">
+          <Tabs
+            value={activeTab}
+            onValueChange={(val) => {
+              setActiveTab(val);
+              setErrors(null);
+            }}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="file">File Upload</TabsTrigger>
+              <TabsTrigger value="link">Links</TabsTrigger>
+              <TabsTrigger value="text">Paste Text</TabsTrigger>
+            </TabsList>
+            <TabsContents>
+              <TabsContent value="file" className="mt-4">
+                <UploadDocuments onUploadSuccess={handleUploadSuccess} />
+              </TabsContent>
+              <TabsContent value="link" className="mt-4">
+                <DocumentInputForm
+                  inputType="link"
+                  value={linkContent}
+                  onChange={setLinkContent}
+                  error={activeTab === "link" ? errors : null}
+                />
+              </TabsContent>
+              <TabsContent value="text" className="mt-4">
+                <DocumentInputForm
+                  inputType="text"
+                  value={textContent}
+                  onChange={setTextContent}
+                  error={activeTab === "text" ? errors : null}
+                />
+              </TabsContent>
+            </TabsContents>
+          </Tabs>
+        </div>
 
-        <DialogFooter>
-          <Button onClick={() => setOpen(false)}>Done</Button>
+        <DialogFooter className="mt-2">
+          <Button onClick={handleDone}>Done</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

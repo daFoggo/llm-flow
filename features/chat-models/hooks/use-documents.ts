@@ -1,22 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-export interface DocumentItem {
-  id: string;
-  type: "link" | "text" | "file";
-  content: string; // URL for link, text content for text, filename for file
-  name?: string; // Optional name for the document
-  size?: number; // Size in bytes
-  createdAt: number;
-  isSelected: boolean;
-}
+import type { IDocumentItem } from "../types/document.type";
 
 const STORAGE_KEY = "chat-model-documents";
 const EVENT_KEY = "documents-updated";
 
 export const useDocuments = () => {
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
+  const [documents, setDocuments] = useState<IDocumentItem[]>([]);
 
   useEffect(() => {
     const loadDocuments = () => {
@@ -49,14 +40,16 @@ export const useDocuments = () => {
     };
   }, []);
 
-  const saveDocuments = (newDocs: DocumentItem[]) => {
+  const saveDocuments = (newDocs: IDocumentItem[]) => {
     setDocuments(newDocs);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newDocs));
     window.dispatchEvent(new Event(EVENT_KEY));
   };
 
-  const addDocument = (doc: Omit<DocumentItem, "id" | "createdAt" | "isSelected">) => {
-    const newDoc: DocumentItem = {
+  const addDocument = (
+    doc: Omit<IDocumentItem, "id" | "createdAt" | "isSelected">
+  ) => {
+    const newDoc: IDocumentItem = {
       ...doc,
       id: crypto.randomUUID(),
       createdAt: Date.now(),
@@ -67,7 +60,7 @@ export const useDocuments = () => {
   };
 
   const addDocuments = (
-    docs: Omit<DocumentItem, "id" | "createdAt" | "isSelected">[]
+    docs: Omit<IDocumentItem, "id" | "createdAt" | "isSelected">[]
   ) => {
     const newDocs = docs.map((doc) => ({
       ...doc,
@@ -100,11 +93,19 @@ export const useDocuments = () => {
     saveDocuments(updated);
   };
 
+  const updateDocument = (id: string, updates: Partial<IDocumentItem>) => {
+    const updated = documents.map((doc) =>
+      doc.id === id ? { ...doc, ...updates } : doc
+    );
+    saveDocuments(updated);
+  };
+
   return {
     documents,
     addDocument,
     addDocuments,
     removeDocument,
+    updateDocument,
     clearDocuments,
     toggleSelection,
     toggleAll,

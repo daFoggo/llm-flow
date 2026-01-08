@@ -1,7 +1,9 @@
 "use client";
 
+import { Flower } from "lucide-react";
 import { ChartSplineIcon } from "@/components/animate-ui/icons/chart-spline";
 import { GalleryVerticalEnd } from "@/components/animate-ui/icons/gallery-horizontal-end";
+import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
 import { List } from "@/components/animate-ui/icons/list";
 import { MessageSquareHeart } from "@/components/animate-ui/icons/message-square-heart";
 import { SparklesIcon } from "@/components/animate-ui/icons/sparkles";
@@ -13,8 +15,6 @@ import {
 import { SITE_CONFIG } from "@/configs/site";
 import type { ISidebarNavItem } from "@/lib/types/sidebar.types";
 import { DashboardHeader } from "./components/dashboard-header";
-import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
-import { Flower } from "lucide-react";
 
 const NAVIGATION: ISidebarNavItem[] = [
   {
@@ -51,16 +51,14 @@ const DashboardLayout = ({
       navigation={NAVIGATION}
       header={
         <SidebarSiteHeader
-          logo={
-            <Flower className="size-4" />
-          }
+          logo={<Flower className="size-4" />}
           title={SITE_CONFIG.name}
         />
       }
       footer={<SidebarUserMenu />}
     >
       <DashboardHeader breadcrumbs={breadcrumb} />
-      <div className="rounded-xl w-full h-full overflow-hidden">{children}</div>
+      <div className="rounded-xl w-full flex-1 overflow-hidden">{children}</div>
     </SidebarLayout>
   );
 };

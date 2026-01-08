@@ -1,5 +1,7 @@
 "use client";
 
+import { StarIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { ThemeSwitcher } from "@/components/animate-ui/components/animate/theme-switcher";
 import { SidebarTrigger } from "@/components/animate-ui/components/radix/sidebar";
 import {
@@ -11,8 +13,6 @@ import {
 } from "@/components/animate-ui/primitives/animate/github-stars";
 import { Separator } from "@/components/ui/separator";
 import { SITE_CONFIG } from "@/configs/site";
-import { StarIcon } from "lucide-react";
-import type { ReactNode } from "react";
 
 interface IDashboardHeaderProps {
   breadcrumbs?: ReactNode;
@@ -20,7 +20,7 @@ interface IDashboardHeaderProps {
 
 export const DashboardHeader = ({ breadcrumbs }: IDashboardHeaderProps) => {
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="flex h-(--dashboard-header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--dashboard-header-height)">
       <div className="flex items-center gap-1 lg:gap-2 px-4 lg:px-6 w-full">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="my-2" />
