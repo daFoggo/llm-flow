@@ -9,6 +9,7 @@
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
 - **Validation:** [Zod](https://zod.dev/)
 - **Server Actions:** [next-safe-action](https://next-safe-action.dev/)
+- **HTTP/Requests:** [ky](https://github.com/sindresorhus/ky)
 - **Forms:** [React Hook Form](https://react-hook-form.com/)
 
 ## Architecture

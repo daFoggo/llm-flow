@@ -25,9 +25,9 @@ features/
     ├── schemas/             # Zod schemas (validation for forms & APIs)
     │   └── [name].schema.ts
     ├── types/               # TypeScript interfaces/types
-    │   └── [name].types.ts
+    │   └── [name].ts         # Convention: matches feature name, no .types suffix
     ├── hooks/               # Custom hooks specific to this feature
-    ├── providers/           # Context Providers (if global state is strictly needed for this feature)
+    ├── providers/           # Context Providers (optional, if logic requires it)
     └── index.ts             # Public API: EXPORT ONLY what the app needs
 ```
 
@@ -40,7 +40,8 @@ app/
 ├── (routes)/                # Route groups (optional, for organization)
 │   ├── [path]/
 │   │   └── page.tsx     # Imports and renders Feature Components
-└── layout.tsx               # Root layout, integrates Feature Providers
+│   └── layout.tsx       # Root layout, integrates Feature Providers
+└── layout.tsx               # Global root layout
 ```
 
 ---
@@ -54,14 +55,14 @@ Example: Implementing an **Auth** feature.
 Start by defining the data structure and validation rules.
 
 - `features/auth/schemas/auth.schema.ts`: Define Zod schemas for Login/Register forms.
-- `features/auth/types/auth.types.ts`: Define necessary TypeScript types.
+- `features/auth/types/auth.ts`: Define necessary TypeScript types/interfaces.
 
 ### Step 2: Implement Core Logic (Services & Actions)
 
 Handle business logic separate from the UI.
 
-- `features/auth/services/auth.service.ts`: Functions for DB interaction (Prisma), password hashing, etc.
-- `features/auth/actions/auth.action.ts`: Server Actions that call services, handle sessions/cookies. Use `next-safe-action` for type safety.
+- `features/auth/services/auth.service.ts`: Functions for DB interaction, external API calls, etc.
+- `features/auth/actions/auth.action.ts`: Server Actions that utilize `actionClient` (next-safe-action) and `kyClient` (for API requests).
 
 ### Step 3: Build UI Components
 
@@ -72,13 +73,15 @@ Construct the interface using the defined logic.
 
 ### Step 4: Public API (The Wrapper)
 
-**Crucial**: Create an `index.ts` file in the feature root to expose only the necessary parts to the rest of the app.
+**Crucial**: Create an `index.ts` file in the feature root to expose the necessary parts to the rest of the app.
 
 - `features/auth/index.ts`:
   ```typescript
-  export * from "./components/login-form";
   export * from "./actions/auth.action";
-  // Do NOT export internal helper functions unless necessary
+  export * from "./components/login-form";
+  export * from "./services/auth.service";
+  export * from "./schemas/auth.schema";
+  export * from "./types/auth";
   ```
 
 ### Step 5: Integrate into App (Routing)
@@ -114,7 +117,7 @@ Create the route in `app/` to display the feature.
 - **Solution**:
   - **Generic UI** (Buttons, Inputs, Modals): Place in `components/ui` or `components/design-system`.
   - **Shared Utilities** (Date formatting, currency): Place in `lib/utils` or `utils/`.
-  - **Shared Domain Components** (e.g., `UserAvatar` used in Chat and Header): Use the **Ownership Pattern**. Determine which feature "owns" the component (e.g., `features/users`) and export it via that feature's `index.ts`. Other features can then import it from there.
+  - **Shared Domain Components**: Use the **Ownership Pattern**. Determine which feature "owns" the component (e.g., `features/users`) and export it via that feature's `index.ts`.
 
 ### 3.3 Thin Pages
 
@@ -123,3 +126,32 @@ Create the route in `app/` to display the feature.
 ### 3.4 Colocation
 
 - Keep code as close as possible to where it is used. Do not create a component in `src/components` if it is only used by a single feature. Place it inside `features/[feature-name]/components`.
+
+---
+
+## 4. Naming Conventions
+
+Consistency is key for a maintainable codebase.
+
+### 4.1 Files & Directories
+
+- **Directories**: `kebab-case` (e.g., `features/chat-models`, `components/ui`).
+- **Files**: `kebab-case` (e.g., `login-form.tsx`, `auth.action.ts`).
+
+| File Type  | Pattern             | Example                       |
+| :--------- | :------------------ | :---------------------------- |
+| Actions    | `[name].action.ts`  | `auth.action.ts`              |
+| Schemas    | `[name].schema.ts`  | `auth.schema.ts`              |
+| Services   | `[name].service.ts` | `notebook-service.service.ts` |
+| Types      | `[name].ts`         | `auth.ts`, `notebooks.ts`     |
+| Components | `[kebab-case].tsx`  | `create-notebook-dialog.tsx`  |
+
+### 4.2 Code
+
+- **Interfaces / Types**: `PascalCase`. No `I` prefix.
+  - Example: `User`, `LoginInput`, `Notebook`.
+- **Variables / Functions**: `camelCase`.
+  - Example: `const currentUser = ...`, `function getUser() { ... }`.
+- **API / Database Fields**: `snake_case`.
+  - This typically matches the backend response (e.g., Python/Django/FastAPI backends).
+  - Example: `access_token`, `user_id`, `created_at`, `file_path`.
