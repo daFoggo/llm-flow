@@ -2,7 +2,7 @@
 
 import { BadgeCheck, ChevronsUpDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useAction } from "next-safe-action/hooks";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -18,30 +18,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getMeAction, logoutAction } from "@/features/auth/actions/auth.action";
-import type { User } from "@/features/auth/types/auth.types";
+import { logoutAction, useUser } from "@/features/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const SidebarUserMenu = () => {
   const isMobile = useIsMobile();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useUser();
 
-  useEffect(() => {
-    async function fetchUser() {
-      const result = await getMeAction();
-      if (result.success && result.data) {
-        setUser(result.data);
-      }
-    }
-    fetchUser();
-  }, []);
+  const { execute: executeLogout } = useAction(logoutAction, {
+    onSuccess: () => {
+      router.refresh(); // Refresh to clear server state
+      router.push("/auth/sign-in");
+    },
+  });
 
-  const handleLogout = async () => {
-    await logoutAction();
-    localStorage.removeItem("access_token");
-    router.refresh(); // Refresh to clear server state
-    router.push("/auth/sign-in");
+  const handleLogout = () => {
+    executeLogout();
   };
 
   if (!user) {

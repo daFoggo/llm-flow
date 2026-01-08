@@ -3,6 +3,7 @@ import { Google_Sans, Google_Sans_Code } from "next/font/google";
 import { TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider, getMeAction } from "@/features/auth";
 import "./globals.css";
 
 // const geistSans = Geist({
@@ -31,11 +32,15 @@ export const metadata: Metadata = {
     "A Next.js shadcn/ui base project for kickstarting your next web application with a modern tech stack, beautiful components, and developer-friendly setup.",
 };
 
-const RootLayout = ({
+const RootLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const userPromise = getMeAction();
+  const userResult = await userPromise;
+  const user = userResult?.data ?? null;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -55,8 +60,10 @@ const RootLayout = ({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster richColors />
+          <AuthProvider initialUser={user}>
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster richColors />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -3,10 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -16,48 +15,47 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { registerAction } from "../actions/auth.action";
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import { type RegisterSchema, registerSchema } from "../schemas/auth.schema";
 
 export function RegisterForm() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const { execute, status } = useAction(registerAction, {
+    onSuccess: (result) => {
+      if (result.data) {
+        toast.success("Account created successfully!");
+        router.refresh();
+        router.push("/dashboard");
+      }
+    },
+    onError: (error) => {
+      const serverError = error.error?.serverError;
+
+      if (serverError) {
+        toast.error(serverError);
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+    },
+  });
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema as any),
+  } = useForm<RegisterSchema>({
+    resolver: zodResolver(registerSchema as any),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    try {
-      const result = await registerAction(values);
-      if (result.success && result.data) {
-        localStorage.setItem("access_token", result.data.access_token);
-        toast.success("Account created successfully!");
-        // Refresh router to update server components (if any depend on cookies)
-        router.refresh();
-        router.push("/dashboard");
-      } else {
-        toast.error(result.error || "Something went wrong");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error("Registration failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const onSubmit = async (values: RegisterSchema) => {
+    execute(values);
+  };
+
+  const isLoading = status === "executing";
 
   return (
     <div className="grid gap-6">
@@ -93,7 +91,7 @@ export function RegisterForm() {
       </form>
       <div className="text-center text-sm">
         Already have an account?{" "}
-        <Link href="/auth/sign-in" className="underline underline-offset-4">
+        <Link href="/sign-in" className="underline underline-offset-4">
           Sign in
         </Link>
       </div>

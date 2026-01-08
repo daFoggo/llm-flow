@@ -3,10 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useAction } from "next-safe-action/hooks";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -16,47 +15,46 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { loginAction } from "../actions/auth.action";
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, "Password is required"),
-});
+import { type LoginSchema, loginSchema } from "../schemas/auth.schema";
 
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const { execute, status } = useAction(loginAction, {
+    onSuccess: (result) => {
+      if (result.data) {
+        toast.success("Logged in successfully!");
+        router.refresh();
+        router.push("/dashboard");
+      }
+    },
+    onError: ({ error }) => {
+      const serverError = error?.serverError;
+      if (serverError) {
+        toast.error(serverError);
+      } else {
+        toast.error("Invalid credentials");
+      }
+    },
+  });
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema as any),
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema as any),
     defaultValues: {
       email: "",
       password: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    try {
-      const result = await loginAction(values);
-      if (result.success && result.data) {
-        localStorage.setItem("access_token", result.data.access_token);
-        toast.success("Logged in successfully!");
-        router.refresh();
-        router.push("/dashboard");
-      } else {
-        toast.error(result.error || "Invalid credentials");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error("Login failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const onSubmit = async (values: LoginSchema) => {
+    execute(values);
+  };
+
+  const isLoading = status === "executing";
 
   return (
     <div className="grid gap-6">
@@ -100,7 +98,7 @@ export function LoginForm() {
       </form>
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/sign-up" className="underline underline-offset-4">
+        <Link href="/sign-up" className="underline underline-offset-4">
           Sign up
         </Link>
       </div>
