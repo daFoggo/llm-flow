@@ -24,7 +24,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export const SidebarUserMenu = () => {
   const isMobile = useIsMobile();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
 
   const { execute: executeLogout } = useAction(logoutAction, {
     onSuccess: () => {
@@ -37,7 +37,7 @@ export const SidebarUserMenu = () => {
     executeLogout();
   };
 
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -54,7 +54,7 @@ export const SidebarUserMenu = () => {
   }
 
   // Fallback if full_name is null
-  const displayName = user.full_name || user.email.split("@")[0];
+  const displayName = user?.full_name || user?.email.split("@")[0];
   const avatarFallback = displayName.substring(0, 2).toUpperCase();
 
   return (
@@ -72,7 +72,7 @@ export const SidebarUserMenu = () => {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{displayName}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate text-xs">{user?.email || ""}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -86,7 +86,7 @@ export const SidebarUserMenu = () => {
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{displayName}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate text-xs">{user?.email || ""}</span>
                 </div>
               </div>
             </DropdownMenuLabel>

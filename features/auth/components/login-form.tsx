@@ -14,6 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { loginAction } from "../actions/auth.action";
 import { type LoginSchema, loginSchema } from "../schemas/auth.schema";
 
@@ -93,6 +94,7 @@ export function LoginForm() {
         </FieldGroup>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && <Spinner />}
           {isLoading ? "Logging in..." : "Login"}
         </Button>
       </form>

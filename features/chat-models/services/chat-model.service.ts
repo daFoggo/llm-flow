@@ -1,5 +1,5 @@
 import "server-only";
-import type { ChatModel } from "../types/chat-model.types";
+import type { ChatModel } from "../types/chat-model";
 
 export const chatModelService = {
   getChatModels: async (): Promise<ChatModel[]> => {

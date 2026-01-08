@@ -1,4 +1,5 @@
 export const BREADCRUMB_MAPPING: Record<string, string> = {
+  notebooks: "Notebooks",
   "chat-models": "Chat Models",
   logs: "Logs",
   feedbacks: "Feedbacks",

@@ -1,16 +1,16 @@
-export type ChatModel = {
+export interface ChatModel {
   id: string;
   name: string;
   provider: "openai" | "anthropic";
   createdAt: string;
-};
+}
 
-export type CreateChatModelInput = {
+export interface CreateChatModelInput {
   name: string;
   provider: string;
-};
+}
 
-export type ChatModelsResponse = {
+export interface ChatModelsResponse {
   data: ChatModel[];
   total: number;
-};
+}

@@ -4,11 +4,7 @@ import { cookies } from "next/headers";
 import { kyClient } from "@/lib/ky";
 import { actionClient } from "@/lib/safe-action";
 import { loginSchema, registerSchema } from "../schemas/auth.schema";
-import type {
-  LoginResponse,
-  RegisterResponse,
-  User,
-} from "../types/auth.types";
+import type { LoginResponse, RegisterResponse, User } from "../types/auth";
 
 export const registerAction = actionClient
   .inputSchema(registerSchema)
@@ -61,8 +57,15 @@ export const loginAction = actionClient
   });
 
 export const getMeAction = actionClient.action(async () => {
-  const result = await kyClient.get("user/me").json<User>();
-  return result;
+  try {
+    const result = await kyClient.get("user/me").json<User>();
+    return result;
+  } catch (error: any) {
+    if (error?.response?.status === 401) {
+      return null;
+    }
+    throw error;
+  }
 });
 
 export const logoutAction = actionClient.action(async () => {

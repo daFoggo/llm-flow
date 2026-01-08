@@ -6,23 +6,23 @@ export type IconType =
   | ComponentType<SVGProps<SVGSVGElement>>
   | ComponentType<{ className?: string }>;
 
-export type SidebarNavItem = {
+export interface SidebarNavItem {
   title: string;
   url: string;
   icon?: IconType;
   isActive?: boolean;
   items?: SidebarNavSubItem[];
-};
+}
 
-export type SidebarNavSubItem = {
+export interface SidebarNavSubItem {
   title: string;
   url: string;
-};
+}
 
-export type SidebarLayoutProps = {
+export interface SidebarLayoutProps {
   children: ReactNode;
   variant?: "inset" | "sidebar" | "floating";
   header?: ReactNode;
   footer?: ReactNode;
   navigation: SidebarNavItem[];
-};
+}

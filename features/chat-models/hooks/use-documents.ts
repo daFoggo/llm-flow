@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { DocumentItem } from "../types/document.type";
+import type { DocumentItem } from "../types/document";
 
 const STORAGE_KEY = "chat-model-documents";
 const EVENT_KEY = "documents-updated";

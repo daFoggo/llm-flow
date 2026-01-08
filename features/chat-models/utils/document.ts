@@ -1,5 +1,5 @@
 import { File, FileText, Link2, type LucideIcon } from "lucide-react";
-import type { DocumentItem } from "../types/document.type";
+import type { DocumentItem } from "../types/document";
 
 export const getIconForType = (type: DocumentItem["type"]): LucideIcon => {
   switch (type) {

@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/animate-ui/components/radix/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { Team } from "@/lib/types/team.types";
+import type { Team } from "@/lib/types/team";
 
 type SidebarTeamSwitcherProps = {
   teams: Team[];

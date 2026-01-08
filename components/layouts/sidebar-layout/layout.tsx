@@ -23,7 +23,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/animate-ui/primitives/radix/collapsible";
-import type { SidebarLayoutProps } from "@/lib/types/sidebar.types";
+import type { SidebarLayoutProps } from "@/lib/types/sidebar";
 
 export const SidebarLayout = ({
   children,

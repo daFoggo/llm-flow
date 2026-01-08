@@ -1,29 +1,36 @@
 "use client";
 
 import { Flower } from "lucide-react";
-import { ChartSplineIcon } from "@/components/animate-ui/icons/chart-spline";
+import type { ReactNode } from "react";
+import { ChartSpline } from "@/components/animate-ui/icons/chart-spline";
+import { Copy } from "@/components/animate-ui/icons/copy";
 import { List } from "@/components/animate-ui/icons/list";
 import { MessageSquareHeart } from "@/components/animate-ui/icons/message-square-heart";
-import { SparklesIcon } from "@/components/animate-ui/icons/sparkles";
+import { Sparkles } from "@/components/animate-ui/icons/sparkles";
 import {
   SidebarLayout,
   SidebarSiteHeader,
   SidebarUserMenu,
 } from "@/components/layouts/sidebar-layout";
 import { SITE_CONFIG } from "@/configs/site";
-import type { SidebarNavItem } from "@/lib/types/sidebar.types";
+import type { SidebarNavItem } from "@/lib/types/sidebar";
 import { DashboardHeader } from "./components/dashboard-header";
 
 const NAVIGATION: SidebarNavItem[] = [
   {
     title: "Overview",
     url: "/dashboard/overview",
-    icon: ChartSplineIcon,
+    icon: ChartSpline,
+  },
+  {
+    title: "Notebooks",
+    url: "/dashboard/notebooks",
+    icon: Copy,
   },
   {
     title: "Chat Models",
     url: "/dashboard/chat-models",
-    icon: SparklesIcon,
+    icon: Sparkles,
   },
   {
     title: "Logs",
@@ -41,8 +48,8 @@ const DashboardLayout = ({
   children,
   breadcrumb,
 }: {
-  children: React.ReactNode;
-  breadcrumb: React.ReactNode;
+  children: ReactNode;
+  breadcrumb: ReactNode;
 }) => {
   return (
     <SidebarLayout

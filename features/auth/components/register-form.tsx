@@ -14,6 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { registerAction } from "../actions/auth.action";
 import { type RegisterSchema, registerSchema } from "../schemas/auth.schema";
 
@@ -86,6 +87,7 @@ export function RegisterForm() {
         </FieldGroup>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && <Spinner />}
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
       </form>

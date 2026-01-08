@@ -1,4 +1,4 @@
-import type { ChatModel } from "../types/chat-model.types";
+import type { ChatModel } from "../types/chat-model";
 
 interface ChatModelListProps {
   data: ChatModel[];

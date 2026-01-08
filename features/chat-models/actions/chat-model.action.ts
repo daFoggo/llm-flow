@@ -1,6 +1,6 @@
 "use server";
 
-import type { CreateChatModelInput } from "../types/chat-model.types";
+import type { CreateChatModelInput } from "../types/chat-model";
 
 export async function createChatModelAction(payload: CreateChatModelInput) {
   try {
