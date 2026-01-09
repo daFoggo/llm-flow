@@ -1,3 +1,4 @@
+import { truncate } from "lodash";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import React from "react";
@@ -46,7 +47,9 @@ export default async function BreadcrumbSlot({
     if (i === all.length - 1) {
       breadcrumbPage = (
         <BreadcrumbItem>
-          <BreadcrumbPage className="font-semibold">{label}</BreadcrumbPage>
+          <BreadcrumbPage className="font-semibold">
+            {truncate(label, { length: 50 })}
+          </BreadcrumbPage>
         </BreadcrumbItem>
       );
     } else {

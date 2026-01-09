@@ -1,11 +1,28 @@
 "use server";
 
+import z from "zod";
 import { actionClient } from "@/lib/safe-action";
 import {
   retrieveContextSchema,
   sendMessageSchema,
 } from "../schemas/chat.schema";
-import { retrieveContext, sendMessage } from "../services/chat.service";
+import {
+  getNotebookHistory,
+  retrieveContext,
+  sendMessage,
+} from "../services/chat.service";
+
+export const getNotebookHistoryAction = actionClient
+  .inputSchema(z.object({ notebook_id: z.number() }))
+  .action(async ({ parsedInput }) => {
+    try {
+      const result = await getNotebookHistory(parsedInput.notebook_id);
+      return result?.summary || "";
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      return "";
+    }
+  });
 
 export const retrieveContextAction = actionClient
   .inputSchema(retrieveContextSchema)
@@ -20,8 +37,6 @@ export const sendMessageAction = actionClient
     const result = await sendMessage(notebook_id, rest);
     let parsedResult = result;
 
-    // Attempt to handle the case where the backend returns a double-encoded JSON string
-    // as warned in the documentation: "Response trả về là một chuỗi JSON string"
     if (typeof result === "string") {
       try {
         parsedResult = JSON.parse(result);

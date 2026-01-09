@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import {
   Context,
@@ -42,6 +43,7 @@ import {
   MessageAction,
   MessageActions,
   MessageContent,
+  MessageResponse,
 } from "@/components/ai-elements/message";
 import {
   PromptInput,
@@ -58,7 +60,9 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { CardContent } from "@/components/ui/card";
+import { BACKEND_IP } from "@/configs/env";
 import {
+  getNotebookHistoryAction,
   retrieveContextAction,
   sendMessageAction,
 } from "../../actions/chat.action";
@@ -163,15 +167,29 @@ const ConversationManagementCardContent = ({
     retrieveContextAction
   );
 
+  // History Action
+  const { executeAsync: getHistory, status: historyStatus } = useAction(
+    getNotebookHistoryAction
+  );
+
   // Send Message Action
   const { executeAsync: sendMessage, status: sendStatus } =
     useAction(sendMessageAction);
 
   const isLoading =
-    retrieveStatus === "executing" || sendStatus === "executing";
+    retrieveStatus === "executing" ||
+    sendStatus === "executing" ||
+    historyStatus === "executing";
 
   const handleSubmit = async (message: PromptInputMessage) => {
     if (!message.text.trim()) return;
+
+    // Validate Source Selection
+    const sourceId = selectedSourceIds?.[0];
+    if (!sourceId) {
+      toast.error("Please select a source to chat with.");
+      return;
+    }
 
     // 1. Optimistically update UI with User Message
     const userMsgId = Date.now().toString();
@@ -180,48 +198,80 @@ const ConversationManagementCardContent = ({
       role: "user",
       content: message.text,
     };
-    setMessages((prev) => [...prev, newUserMsg]);
-    setText("");
+    flushSync(() => {
+      setMessages((prev) => [...prev, newUserMsg]);
+      setText("");
+    });
 
     try {
-      // 2. Retrieve Context
-      const retrieveResult = await retrieve({
-        user_query: message.text,
-        docs_ids: selectedSourceIds?.length ? selectedSourceIds : undefined,
-      });
+      // 2. Parallel Requests: History + Retrieve
+      const [historyResult, retrieveResult] = await Promise.all([
+        getHistory({ notebook_id: notebookId }),
+        retrieve({
+          user_query: message.text,
+          source_id: sourceId,
+        }),
+      ]);
 
+      // Check Retrieval Errors
       if (retrieveResult?.serverError || !retrieveResult?.data) {
         throw new Error("Failed to retrieve context");
       }
 
-      const retrievedDocs = retrieveResult.data;
+      const retrievedContext = retrieveResult.data;
+      const historySummary = historyResult?.data || "";
 
-      // 3. Format History
-      // "User: ... \nAssistant: ..."
-      const historyStr = messages
-        .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
-        .join("\n");
-      // Append current message
-      const fullHistory = `${historyStr}\nUser: ${message.text}`;
-
-      // 4. Send Message to AI
+      // 3. Send Message to AI
       const aiResult = await sendMessage({
         notebook_id: notebookId,
         query: message.text,
-        history: fullHistory,
-        documents: retrievedDocs,
+        history: historySummary,
+        documents: retrievedContext,
       });
 
       if (aiResult?.serverError || !aiResult?.data) {
         throw new Error("Failed to get AI response");
       }
 
-      // 5. Update UI with AI Response
+      // 4. Update UI with AI Response
+      // Replace markdown image paths with full backend URL
+      // Check if response contains markdown image syntax ![alt](url)
+      // and if url starts with http://localhost:8000, replace with BACKEND_IP
+      // Or if it's relative path...
+      // Based on user log: http://localhost:8000/static/...
+      let processedResponse = aiResult.data.response;
+
+      if (BACKEND_IP) {
+        // Replace localhost:8000 and localhost:4000
+        processedResponse = processedResponse
+          .replace(
+            /\]\(http:\/\/localhost:8000\/static\//g,
+            `](${BACKEND_IP}/static/`
+          )
+          .replace(
+            /\]\(http:\/\/localhost:4000\/static\//g,
+            `](${BACKEND_IP}/static/`
+          )
+          .replace(
+            /\]\(http:\/\/192\.168\.\d+\.\d+:4000\/static\//g,
+            `](${BACKEND_IP}/static/`
+          );
+      }
+
+      // Fix newlines in markdown image alt text which breaks standard parsers
+      // Matches ![...](...) and replaces newlines inside the [...] part
+      processedResponse = processedResponse.replace(
+        /!\[([^\]]*)\]/g,
+        (_match, altText) => {
+          return `![${altText.replace(/\n/g, " ")}]`;
+        }
+      );
+
       const aiMsgId = (Date.now() + 1).toString();
       const newAiMsg: MessageType = {
         id: aiMsgId,
-        role: "assistant", // Ensuring type safety for string literal
-        content: aiResult.data.response, // Assuming response field is the text
+        role: "assistant",
+        content: processedResponse,
         citations: aiResult.data.citations,
         recommendations: aiResult.data.recommendations,
       };
@@ -229,7 +279,6 @@ const ConversationManagementCardContent = ({
     } catch (error) {
       console.error("Chat error:", error);
       toast.error("An error occurred while processing your request.");
-      // Optionally remove the user message or show an error state in the chat
     }
   };
 
@@ -239,7 +288,12 @@ const ConversationManagementCardContent = ({
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Use timeout to allow rendering to complete
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 50);
     }
   }, [messages.length]);
 
@@ -287,7 +341,7 @@ const ConversationManagementCardContent = ({
                     </InlineCitationCard>
                   </InlineCitation>
                 ) : (
-                  msg.content
+                  <MessageResponse>{msg.content}</MessageResponse>
                 )}
               </MessageContent>
               {msg.role === "assistant" && (
@@ -318,7 +372,7 @@ const ConversationManagementCardContent = ({
             {/* Recommendations/Suggestions */}
             {msg.recommendations && msg.recommendations.length > 0 && (
               <Suggestions>
-                {msg.recommendations.map((rec) => (
+                {msg.recommendations.slice(0, 3).map((rec) => (
                   <Suggestion
                     key={rec}
                     suggestion={rec}

@@ -1,26 +1,30 @@
 export interface RetrieveContextInput {
   user_query: string;
-  docs_ids?: number[];
+  source_id: number;
 }
 
-export interface RetrievedChunk {
-  chunk_id: string;
-  score: number;
-  text: string;
-  doc_id: number;
-  page: number;
+export interface RetrievedImage {
+  caption: string;
+  image_path: string;
+  page?: number;
+  breadcrumb?: string;
 }
 
-export type RetrieveContextResponse = RetrievedChunk[];
+export interface RetrievedContext {
+  texts: string[];
+  images: RetrievedImage[];
+}
+
+export type RetrieveContextResponse = RetrievedContext;
 
 export interface SendMessageInput {
   query: string;
   history: string;
-  documents: RetrievedChunk[];
+  documents: RetrievedContext;
 }
 
 export interface AIResponse {
   response: string;
-  citations?: string[];
-  recommendations?: string[];
+  citations: string[];
+  recommendations: string[];
 }

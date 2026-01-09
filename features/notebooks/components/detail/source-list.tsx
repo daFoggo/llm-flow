@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -56,6 +57,16 @@ export const SourceList = ({
   onSelectionChange,
 }: SourceListProps) => {
   const { sources, isLoading, mutate } = useSources(notebookId);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && sources && sources.length > 0 && !hasInitialized) {
+      if (onSelectionChange) {
+        onSelectionChange(sources.map((s) => s.id));
+      }
+      setHasInitialized(true);
+    }
+  }, [isLoading, sources, hasInitialized, onSelectionChange]);
 
   const toggleSelection = (id: number, checked: boolean) => {
     if (!onSelectionChange) return;

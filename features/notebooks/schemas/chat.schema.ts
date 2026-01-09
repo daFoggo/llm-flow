@@ -2,22 +2,26 @@ import z from "zod";
 
 export const retrieveContextSchema = z.object({
   user_query: z.string(),
-  docs_ids: z.array(z.number()).optional(),
+  source_id: z.number(),
 });
 
-export const retrievedChunkSchema = z.object({
-  chunk_id: z.string(),
-  score: z.number(),
-  text: z.string(),
-  doc_id: z.number(),
-  page: z.number(),
+export const retrievedImageSchema = z.object({
+  caption: z.string(),
+  image_path: z.string(),
+  page: z.number().optional(),
+  breadcrumb: z.string().optional(),
+});
+
+export const retrievedContextSchema = z.object({
+  texts: z.array(z.string()),
+  images: z.array(retrievedImageSchema),
 });
 
 export const sendMessageSchema = z.object({
   notebook_id: z.number(),
   query: z.string(),
   history: z.string(),
-  documents: z.array(retrievedChunkSchema),
+  documents: retrievedContextSchema,
 });
 
 export type RetrieveContextSchema = z.infer<typeof retrieveContextSchema>;

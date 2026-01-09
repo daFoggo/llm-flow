@@ -33,7 +33,7 @@ export const NotebookList = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2 pb-4 min-h-0 flex-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-2 pb-4 min-h-0 flex-1">
         {notebooks.map((notebook) => (
           <NotebookCard key={notebook.id} notebook={notebook} />
         ))}
