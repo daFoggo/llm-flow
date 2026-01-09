@@ -1,7 +1,8 @@
+import { BACKEND_API } from "@/configs/env";
 import ky from "ky";
 
 export const kyClient = ky.create({
-  prefixUrl: process.env.NEXT_PUBLIC_BACKEND_API,
+  prefixUrl: BACKEND_API,
   timeout: 30_000,
   retry: {
     limit: 2,
