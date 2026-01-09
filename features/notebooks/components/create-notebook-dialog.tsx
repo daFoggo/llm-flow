@@ -5,6 +5,8 @@ import { useAction } from "next-safe-action/hooks";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Plus } from "@/components/animate-ui/icons/plus";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -140,13 +142,18 @@ export const CreateNotebookDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Create Notebook</Button>
+        <AnimateIcon animateOnHover animateOnView>
+          <Button className="w-fit">
+            <Plus />
+            Create Notebook
+          </Button>
+        </AnimateIcon>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Create Notebook</DialogTitle>
           <DialogDescription>
-            Upload files to create a new notebook.
+            Upload documents to create a new notebook.
           </DialogDescription>
         </DialogHeader>
 

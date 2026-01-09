@@ -2,8 +2,14 @@
 
 import { kyClient } from "@/lib/ky";
 import { actionClient } from "@/lib/safe-action";
-import { createNotebookSchema } from "../schemas/notebooks.schema";
-import type { CreateNotebookResponse } from "../types/notebooks";
+import {
+  createNotebookSchema,
+  getNotebooksSchema,
+} from "../schemas/notebooks.schema";
+import type {
+  CreateNotebookResponse,
+  GetNotebooksResponse,
+} from "../types/notebooks";
 
 export const createNotebookAction = actionClient
   .inputSchema(createNotebookSchema)
@@ -20,6 +26,24 @@ export const createNotebookAction = actionClient
     const result = await kyClient
       .post("notebook", { body: formData })
       .json<CreateNotebookResponse>();
+
+    return result;
+  });
+
+export const getNotebooksAction = actionClient
+  .inputSchema(getNotebooksSchema)
+  .action(async ({ parsedInput: { limit, last_id } }) => {
+    const searchParams = new URLSearchParams();
+    if (limit) {
+      searchParams.set("limit", limit.toString());
+    }
+    if (last_id !== undefined) {
+      searchParams.set("last_id", last_id.toString());
+    }
+
+    const result = await kyClient
+      .get("notebook", { searchParams })
+      .json<GetNotebooksResponse>();
 
     return result;
   });

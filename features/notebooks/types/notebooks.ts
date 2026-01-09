@@ -32,3 +32,5 @@ export interface CreateNotebookResponse {
   success_files: Notebook[];
   failed_files: Notebook[];
 }
+
+export type GetNotebooksResponse = Notebook[];
