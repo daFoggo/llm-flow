@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+
 import { Copy } from "@/components/animate-ui/icons/copy";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,16 +11,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { useNotebooks } from "../hooks/use-notebooks";
-import type { Notebook } from "../types/notebooks";
 import { NotebookCard } from "./notebook-card";
 
-interface NotebookListProps {
-  initialNotebooks?: Notebook[];
-}
-
-export const NotebookList = ({ initialNotebooks }: NotebookListProps) => {
+export const NotebookList = () => {
   const { notebooks, isLoadingMore, isReachingEnd, loadMore, isValidating } =
-    useNotebooks(initialNotebooks);
+    useNotebooks();
 
   if (notebooks.length === 0) {
     return (

@@ -4,8 +4,11 @@ import { kyClient } from "@/lib/ky";
 import { actionClient } from "@/lib/safe-action";
 import {
   createNotebookSchema,
+  deleteNotebookSchema,
+  getNotebookByIdSchema,
   getNotebooksSchema,
 } from "../schemas/notebooks.schema";
+import { getNotebookById } from "../services/notebooks.service";
 import type {
   CreateNotebookResponse,
   GetNotebooksResponse,
@@ -44,6 +47,31 @@ export const getNotebooksAction = actionClient
     const result = await kyClient
       .get("notebook", { searchParams })
       .json<GetNotebooksResponse>();
+
+    return result;
+  });
+
+export const getNotebookByIdAction = actionClient
+  .inputSchema(getNotebookByIdSchema)
+  .action(async ({ parsedInput: { id } }) => {
+    const notebook = await getNotebookById(id);
+
+    if (!notebook) {
+      throw new Error("Notebook not found");
+    }
+
+    return notebook;
+  });
+
+export const deleteNotebookAction = actionClient
+  .inputSchema(deleteNotebookSchema)
+  .action(async ({ parsedInput: { notebook_id } }) => {
+    const searchParams = new URLSearchParams();
+    searchParams.set("notebook_id", notebook_id.toString());
+
+    const result = await kyClient
+      .delete("notebook", { searchParams })
+      .json<{ status: string }>();
 
     return result;
   });

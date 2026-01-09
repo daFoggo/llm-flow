@@ -1,3 +1,6 @@
+import Link from "next/link";
+import type { ReactElement } from "react";
+import React from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,10 +9,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getBreadcrumbLabel } from "@/lib/breadcrumb-mapping";
-import Link from "next/link";
-import type { ReactElement } from "react";
-import React from "react";
+import {
+  getBreadcrumbLabel,
+  getDynamicBreadcrumbLabel,
+} from "@/lib/breadcrumb-mapping";
 
 export default async function BreadcrumbSlot({
   params,
@@ -24,8 +27,21 @@ export default async function BreadcrumbSlot({
 
   for (let i = 0; i < all.length; i++) {
     const route = all[i];
-    const label = getBreadcrumbLabel(route);
+    let label = getBreadcrumbLabel(route);
     const href = `${rootHref}/${all.slice(0, i + 1).join("/")}`;
+
+    // Handle dynamic breadcrumbs using the resolver registry
+    // We check if the *previous* segment identifies a resource type (e.g. "notebooks" -> "123")
+    if (i > 0) {
+      const parentSegment = all[i - 1];
+      const dynamicLabel = await getDynamicBreadcrumbLabel(
+        parentSegment,
+        route
+      );
+      if (dynamicLabel) {
+        label = dynamicLabel;
+      }
+    }
 
     if (i === all.length - 1) {
       breadcrumbPage = (

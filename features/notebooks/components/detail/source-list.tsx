@@ -1,8 +1,16 @@
 "use client";
 
 import { truncate } from "lodash";
-import { EllipsisVertical, FileText } from "lucide-react";
-
+import {
+  EllipsisVertical,
+  File,
+  FileImage,
+  FileText,
+  Loader2,
+  Trash2,
+} from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -30,19 +38,87 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components/ui/item";
-import { useDocuments } from "@/features/chat-models/hooks/use-documents";
 import { cn } from "@/lib/utils";
-import { getIconForType } from "../utils/document";
+import { deleteSourceAction } from "../../actions/sources.action";
+import { useSources } from "../../hooks/use-sources";
 
-type DocumentListProps = {
+type SourceListProps = {
   isMinimized?: boolean;
+  notebookId: number;
+  selectedIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
 };
 
-export const DocumentList = ({ isMinimized }: DocumentListProps) => {
-  const { documents, toggleSelection, toggleAll } = useDocuments();
+export const SourceList = ({
+  isMinimized,
+  notebookId,
+  selectedIds = [],
+  onSelectionChange,
+}: SourceListProps) => {
+  const { sources, isLoading, mutate } = useSources(notebookId);
+
+  const toggleSelection = (id: number, checked: boolean) => {
+    if (!onSelectionChange) return;
+    if (checked) {
+      onSelectionChange([...selectedIds, id]);
+    } else {
+      onSelectionChange(selectedIds.filter((sid) => sid !== id));
+    }
+  };
+
+  const toggleAll = (checked: boolean) => {
+    if (!onSelectionChange || !sources) return;
+    if (checked) {
+      onSelectionChange(sources.map((s) => s.id));
+    } else {
+      onSelectionChange([]);
+    }
+  };
 
   const allSelected =
-    documents.length > 0 && documents.every((d) => d.isSelected);
+    sources &&
+    sources.length > 0 &&
+    sources.every((s) => selectedIds.includes(s.id));
+
+  const { execute: deleteSource, status: deleteStatus } = useAction(
+    deleteSourceAction,
+    {
+      onSuccess: () => {
+        toast.success("Source deleted");
+        mutate();
+      },
+      onError: ({ error }) => {
+        let errorMessage = "Failed to delete source";
+        if (typeof error.serverError === "string") {
+          errorMessage = error.serverError;
+        }
+        toast.error(errorMessage);
+      },
+    }
+  );
+
+  const handleDelete = (sourceId: number) => {
+    deleteSource({ notebook_id: notebookId, source_id: sourceId });
+  };
+
+  const getIcon = (filename: string) => {
+    const ext = filename?.split(".").pop()?.toLowerCase();
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")) {
+      return FileImage;
+    }
+    if (["pdf", "docx", "txt", "md"].includes(ext || "")) {
+      return FileText;
+    }
+    return File;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-4">
+        <Loader2 className="animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -51,13 +127,13 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
         isMinimized && "gap-2"
       )}
     >
-      {documents.length === 0 ? (
+      {!sources || sources.length === 0 ? (
         !isMinimized && (
           <Empty className="border-border bg-background/50">
             <EmptyMedia>
               <FileText className="text-muted-foreground" />
             </EmptyMedia>
-            <EmptyTitle>No documents added</EmptyTitle>
+            <EmptyTitle>No sources added</EmptyTitle>
             <EmptyDescription>
               Click "Add documents" to start diving into your data.
             </EmptyDescription>
@@ -65,10 +141,10 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
         )
       ) : (
         <ItemGroup>
-          {documents.length > 0 && !isMinimized && (
+          {sources.length > 0 && !isMinimized && (
             <Item>
-              <ItemContent className="flex-">
-                <ItemTitle>Total documents: {documents.length}</ItemTitle>
+              <ItemContent>
+                <ItemTitle>Total sources: {sources.length}</ItemTitle>
               </ItemContent>
               <ItemActions>
                 <div className="flex items-center gap-2">
@@ -84,12 +160,13 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
               </ItemActions>
             </Item>
           )}
-          {documents.map((doc) => {
-            const Icon = getIconForType(doc.type);
+          {sources.map((source) => {
+            const Icon = getIcon(source.filename);
+            const isSelected = selectedIds.includes(source.id);
 
             const ItemComponent = (
               <Item
-                key={doc.id}
+                key={source.id}
                 className={cn(
                   "group/item transition-all",
                   isMinimized && "border-0 p-0 shadow-none hover:bg-transparent"
@@ -105,8 +182,14 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
                         </ItemMedia>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
-                        <DropdownMenuItem>Change name</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        {/* Rename not supported by API yet
+                        <DropdownMenuItem>Rename</DropdownMenuItem> */}
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDelete(source.id)}
+                          disabled={deleteStatus === "executing"}
+                        >
+                          <Trash2 className="mr-2 size-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -114,15 +197,17 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
 
                     <ItemContent>
                       <ItemTitle className="line-clamp-1">
-                        {truncate(doc.name || doc.content)}
+                        {truncate(source.title || source.filename, {
+                          length: 30,
+                        })}
                       </ItemTitle>
                     </ItemContent>
 
                     <Checkbox
                       className="shrink-0"
-                      checked={doc.isSelected}
+                      checked={isSelected}
                       onCheckedChange={(checked) =>
-                        toggleSelection(doc.id, checked === true)
+                        toggleSelection(source.id, checked === true)
                       }
                     />
                   </>
@@ -138,10 +223,12 @@ export const DocumentList = ({ isMinimized }: DocumentListProps) => {
 
             if (isMinimized) {
               return (
-                <Tooltip side="right" key={doc.id}>
+                <Tooltip side="right" key={source.id}>
                   <TooltipTrigger asChild>{ItemComponent}</TooltipTrigger>
                   <TooltipContent className="max-w-xs">
-                    <p className="truncate">{doc.name || doc.content}</p>
+                    <p className="truncate">
+                      {source.title || source.filename}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               );

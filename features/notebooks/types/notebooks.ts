@@ -1,3 +1,5 @@
+import type { Source } from "./source";
+
 export interface Notebook {
   id?: number;
   title?: string;
@@ -5,14 +7,6 @@ export interface Notebook {
   user_id?: number;
   created_at?: string;
   updated_at?: string;
-
-  // File properties
-  filename?: string;
-  file_path?: string;
-  file_hash?: string;
-
-  // Error properties
-  error?: string;
 }
 
 export interface CreateNotebookInput {
@@ -29,8 +23,8 @@ export interface DeleteNotebookInput {
 
 export interface CreateNotebookResponse {
   notebook: Notebook;
-  success_files: Notebook[];
-  failed_files: Notebook[];
+  success_files: Source[];
+  failed_files: Source[];
 }
 
 export type GetNotebooksResponse = Notebook[];

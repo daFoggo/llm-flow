@@ -6,7 +6,6 @@ import { ChartSpline } from "@/components/animate-ui/icons/chart-spline";
 import { Copy } from "@/components/animate-ui/icons/copy";
 import { List } from "@/components/animate-ui/icons/list";
 import { MessageSquareHeart } from "@/components/animate-ui/icons/message-square-heart";
-import { Sparkles } from "@/components/animate-ui/icons/sparkles";
 import {
   SidebarLayout,
   SidebarSiteHeader,
@@ -26,11 +25,6 @@ const NAVIGATION: SidebarNavItem[] = [
     title: "Notebooks",
     url: "/dashboard/notebooks",
     icon: Copy,
-  },
-  {
-    title: "Chat Models",
-    url: "/dashboard/chat-models",
-    icon: Sparkles,
   },
   {
     title: "Logs",

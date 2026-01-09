@@ -29,7 +29,7 @@ export const SidebarUserMenu = () => {
   const { execute: executeLogout } = useAction(logoutAction, {
     onSuccess: () => {
       router.refresh(); // Refresh to clear server state
-      router.push("/auth/sign-in");
+      router.push("/sign-in");
     },
   });
 

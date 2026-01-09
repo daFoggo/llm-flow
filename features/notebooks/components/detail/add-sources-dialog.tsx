@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import {
   Tabs,
@@ -26,22 +27,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useDocuments } from "@/features/chat-models/hooks/use-documents";
 import { cn } from "@/lib/utils";
-import { DocumentInputForm } from "./document-input-form";
-import { UploadDocuments } from "./upload-documents";
+import { useSources } from "../../hooks/use-sources";
+import { SourceInputForm } from "./source-input-form";
+import { UploadSources } from "./upload-sources";
 
 type AddSourcesDialogProps = {
   isMinimized?: boolean;
+  notebookId: number;
 };
 
-export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
+export const AddSourcesDialog = ({
+  isMinimized,
+  notebookId,
+}: AddSourcesDialogProps) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("file");
   const [linkContent, setLinkContent] = useState("");
   const [textContent, setTextContent] = useState("");
   const [errors, setErrors] = useState<string | null>(null);
-  const { addDocuments, addDocument } = useDocuments();
+
+  const { mutate } = useSources(notebookId);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -57,57 +63,49 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
   };
 
   const handleUploadSuccess = (file: File) => {
-    addDocument({
-      type: "file",
-      content: file.name,
-      name: file.name,
-      size: file.size,
-    });
+    toast.success(`Source "${file.name}" added successfully`);
+    mutate();
   };
 
-  const linkSchema = z
-    .string()
-    .transform((val) =>
-      val
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean)
-    )
-    .pipe(
-      z.array(z.string().url({ message: "Invalid URL format" })).min(1, {
-        message: "At least one valid URL is required",
-      })
-    );
+  // const linkSchema = z
+  //   .string()
+  //   .transform((val) =>
+  //     val
+  //       .split("\n")
+  //       .map((l) => l.trim())
+  //       .filter(Boolean)
+  //   )
+  //   .pipe(
+  //     z.array(z.string().url({ message: "Invalid URL format" })).min(1, {
+  //       message: "At least one valid URL is required",
+  //     })
+  //   );
 
-  const textSchema = z
-    .string()
-    .trim()
-    .min(1, { message: "Text content cannot be empty" });
+  // const textSchema = z
+  //   .string()
+  //   .trim()
+  //   .min(1, { message: "Text content cannot be empty" });
 
   const handleDone = () => {
     setErrors(null);
 
+    // Disable Link and Text logic for now as per requirement
+    if (activeTab === "link" || activeTab === "text") {
+      toast.info("This feature is not yet supported by the backend.");
+      setOpen(false);
+      return;
+    }
+
     try {
+      /*
       if (activeTab === "link") {
         const links = linkSchema.parse(linkContent);
-        addDocuments(
-          links.map((link) => ({
-            type: "link",
-            content: link,
-            name: link,
-          }))
-        );
+         // Logic removed
       } else if (activeTab === "text") {
         const content = textSchema.parse(textContent);
-        addDocuments([
-          {
-            type: "text",
-            content: content,
-            name: "Text Snippet",
-            size: content.length,
-          },
-        ]);
+         // Logic removed
       }
+      */
       setOpen(false);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -123,7 +121,7 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
       <AnimateIcon animateOnHover={!isMinimized}>
         <PlusIcon />
       </AnimateIcon>
-      {!isMinimized && "Add documents"}
+      {!isMinimized && "Add sources"}
     </Button>
   );
 
@@ -135,7 +133,7 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
             <DialogTrigger asChild>{TriggerButton}</DialogTrigger>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Add documents</p>
+            <p>Add sources</p>
           </TooltipContent>
         </Tooltip>
       ) : (
@@ -143,10 +141,8 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
       )}
       <DialogContent className="sm:min-w-2xl flex flex-col max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Add documents</DialogTitle>
-          <DialogDescription>
-            Deep dive into your documents with AI-powered insights and analysis.
-          </DialogDescription>
+          <DialogTitle>Add sources</DialogTitle>
+          <DialogDescription>Upload files to your notebook.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto py-2">
@@ -165,10 +161,13 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
             </TabsList>
             <TabsContents>
               <TabsContent value="file" className="mt-4">
-                <UploadDocuments onUploadSuccess={handleUploadSuccess} />
+                <UploadSources
+                  notebookId={notebookId}
+                  onUploadSuccess={handleUploadSuccess}
+                />
               </TabsContent>
               <TabsContent value="link" className="mt-4">
-                <DocumentInputForm
+                <SourceInputForm
                   inputType="link"
                   value={linkContent}
                   onChange={setLinkContent}
@@ -176,7 +175,7 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
                 />
               </TabsContent>
               <TabsContent value="text" className="mt-4">
-                <DocumentInputForm
+                <SourceInputForm
                   inputType="text"
                   value={textContent}
                   onChange={setTextContent}
@@ -187,9 +186,11 @@ export const AddSourcesDialog = ({ isMinimized }: AddSourcesDialogProps) => {
           </Tabs>
         </div>
 
-        <DialogFooter className="mt-2">
-          <Button onClick={handleDone}>Done</Button>
-        </DialogFooter>
+        {activeTab !== "file" && (
+          <DialogFooter className="mt-2">
+            <Button onClick={handleDone}>Done</Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

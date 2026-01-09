@@ -22,3 +22,9 @@ export const deleteNotebookSchema = z.object({
 export type CreateNotebookSchema = z.infer<typeof createNotebookSchema>;
 export type GetNotebooksSchema = z.infer<typeof getNotebooksSchema>;
 export type DeleteNotebookSchema = z.infer<typeof deleteNotebookSchema>;
+
+export const getNotebookByIdSchema = z.object({
+  id: z.number(),
+});
+
+export type GetNotebookByIdSchema = z.infer<typeof getNotebookByIdSchema>;

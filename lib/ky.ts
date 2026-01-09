@@ -32,10 +32,10 @@ export const kyClient = ky.create({
       async (_request, _options, response) => {
         // Auto-refresh token khi bị 401
         if (response.status === 401) {
-          // refresh token ở đây
-          // const newToken = await refreshToken();
-          // localStorage.setItem("ACCESS_TOKEN", newToken);
-          // return kyClient(_request); // retry
+          // If on client side, redirect to sign-in
+          if (typeof window !== "undefined") {
+            window.location.href = "/sign-in";
+          }
         }
       },
     ],

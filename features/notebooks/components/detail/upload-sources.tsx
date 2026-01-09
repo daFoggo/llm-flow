@@ -1,6 +1,7 @@
 "use client";
 
 import { Upload, X } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -17,16 +18,23 @@ import {
   FileUploadList,
   FileUploadTrigger,
 } from "@/components/ui/file-upload";
+import { uploadSourceAction } from "../../actions/sources.action";
 
-type UploadDocumentsProps = {
+type UploadSourcesProps = {
+  notebookId: number;
   onUploadSuccess?: (file: File) => void;
 };
 
-export const UploadDocuments = ({ onUploadSuccess }: UploadDocumentsProps) => {
+export const UploadSources = ({
+  notebookId,
+  onUploadSuccess,
+}: UploadSourcesProps) => {
   const MAX_ALLOWED_FILES = 10;
   const MAX_VISIBLE_FILES = 3;
   const MAX_FILE_SIZE_MB = 100;
   const [files, setFiles] = useState<File[]>([]);
+
+  const { executeAsync } = useAction(uploadSourceAction);
 
   const onUpload = useCallback(
     async (
@@ -42,30 +50,43 @@ export const UploadDocuments = ({ onUploadSuccess }: UploadDocumentsProps) => {
       }
     ) => {
       try {
-        // Process each file individually
         const uploadPromises = files.map(async (file) => {
           try {
-            // Simulate file upload with progress
-            const totalChunks = 10;
-            let uploadedChunks = 0;
+            onProgress(file, 10); // Start progress
 
-            // Simulate chunk upload with delays
-            for (let i = 0; i < totalChunks; i++) {
-              // Simulate network delay (100-300ms per chunk)
-              await new Promise((resolve) =>
-                setTimeout(resolve, Math.random() * 200 + 100)
-              );
+            const toBase64 = (file: File) =>
+              new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () =>
+                  resolve((reader.result as string).split(",")[1]);
+                reader.onerror = (error) => reject(error);
+              });
 
-              // Update progress for this specific file
-              uploadedChunks++;
-              const progress = (uploadedChunks / totalChunks) * 100;
-              onProgress(file, progress);
+            const content = await toBase64(file);
+            onProgress(file, 40); // Reading done
+
+            const result = await executeAsync({
+              notebook_id: notebookId,
+              file: {
+                filename: file.name,
+                content,
+                type: file.type,
+              },
+            });
+
+            if (result?.data) {
+              onProgress(file, 100);
+              onSuccess(file);
+              onUploadSuccess?.(file);
+            } else {
+              const errorMsg = result?.serverError
+                ? typeof result.serverError === "string"
+                  ? result.serverError
+                  : "Server Error"
+                : "Upload failed";
+              throw new Error(errorMsg);
             }
-
-            // Simulate server processing delay
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            onSuccess(file);
-            onUploadSuccess?.(file);
           } catch (error) {
             onError(
               file,
@@ -74,18 +95,16 @@ export const UploadDocuments = ({ onUploadSuccess }: UploadDocumentsProps) => {
           }
         });
 
-        // Wait for all uploads to complete
         await Promise.all(uploadPromises);
       } catch (error) {
-        // This handles any error that might occur outside the individual upload processes
         console.error("Unexpected error during upload:", error);
       }
     },
-    [onUploadSuccess]
+    [notebookId, executeAsync, onUploadSuccess]
   );
 
   const onFileReject = React.useCallback((file: File, message: string) => {
-    toast(message, {
+    toast.error(message, {
       description: `"${
         file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name
       }" has been rejected`,
