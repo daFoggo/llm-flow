@@ -24,6 +24,7 @@ export function LoginForm() {
   const { execute, status } = useAction(loginAction, {
     onSuccess: (result) => {
       if (result.data) {
+        localStorage.setItem("access_token", result.data.access_token);
         toast.success("Logged in successfully!");
         router.refresh();
         router.push("/dashboard");

@@ -19,7 +19,7 @@ export const registerAction = actionClient
     const cookieStore = await cookies();
     cookieStore.set("access_token", result.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 1 week
     });
@@ -48,7 +48,7 @@ export const loginAction = actionClient
     const cookieStore = await cookies();
     cookieStore.set("access_token", result.access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 1 week
     });
