@@ -233,49 +233,57 @@ const ConversationManagementCardContent = ({
         throw new Error("Failed to get AI response");
       }
 
+      const data = aiResult.data;
+
       // 4. Update UI with AI Response
-      // Replace markdown image paths with full backend URL
-      // Check if response contains markdown image syntax ![alt](url)
-      // and if url starts with http://localhost:8000, replace with BACKEND_IP
-      // Or if it's relative path...
-      // Based on user log: http://localhost:8000/static/...
-      let processedResponse = aiResult.data.response;
+      const aiResponseMessages = data.messages;
+      const newMessages: MessageType[] = [];
 
-      if (BACKEND_IP) {
-        // Replace localhost:8000 and localhost:4000
-        processedResponse = processedResponse
-          .replace(
-            /\]\(http:\/\/localhost:8000\/static\//g,
-            `](${BACKEND_IP}/static/`
-          )
-          .replace(
-            /\]\(http:\/\/localhost:4000\/static\//g,
-            `](${BACKEND_IP}/static/`
-          )
-          .replace(
-            /\]\(http:\/\/192\.168\.\d+\.\d+:4000\/static\//g,
-            `](${BACKEND_IP}/static/`
-          );
-      }
-
-      // Fix newlines in markdown image alt text which breaks standard parsers
-      // Matches ![...](...) and replaces newlines inside the [...] part
-      processedResponse = processedResponse.replace(
-        /!\[([^\]]*)\]/g,
-        (_match, altText) => {
-          return `![${altText.replace(/\n/g, " ")}]`;
+      aiResponseMessages.forEach((msg, index) => {
+        let content = "";
+        if (msg.type === "text") {
+          content = msg.content || "";
+        } else if (msg.type === "image") {
+          content = `![${msg.caption || "Image"}](${msg.image_path})`;
         }
-      );
 
-      const aiMsgId = (Date.now() + 1).toString();
-      const newAiMsg: MessageType = {
-        id: aiMsgId,
-        role: "assistant",
-        content: processedResponse,
-        citations: aiResult.data.citations,
-        recommendations: aiResult.data.recommendations,
-      };
-      setMessages((prev) => [...prev, newAiMsg]);
+        if (BACKEND_IP) {
+          // Replace localhost:8000 and localhost:4000
+          content = content
+            .replace(
+              /\]\(http:\/\/localhost:8000\/static\//g,
+              `](${BACKEND_IP}/static/`
+            )
+            .replace(
+              /\]\(http:\/\/localhost:4000\/static\//g,
+              `](${BACKEND_IP}/static/`
+            )
+            .replace(
+              /\]\(http:\/\/192\.168\.\d+\.\d+:4000\/static\//g,
+              `](${BACKEND_IP}/static/`
+            );
+        }
+
+        // Fix newlines in markdown image alt text which breaks standard parsers
+        content = content.replace(/!\[([^\]]*)\]/g, (_match, altText) => {
+          return `![${altText.replace(/\n/g, " ")}]`;
+        });
+
+        const isLastMessage = index === aiResponseMessages.length - 1;
+        const aiMsgId = (Date.now() + index + 1).toString();
+
+        newMessages.push({
+          id: aiMsgId,
+          role: "assistant",
+          content: content,
+          citations: isLastMessage ? data.citations : undefined,
+          recommendations: isLastMessage
+            ? data.recommendations
+            : undefined,
+        });
+      });
+
+      setMessages((prev) => [...prev, ...newMessages]);
     } catch (error) {
       console.error("Chat error:", error);
       toast.error("An error occurred while processing your request.");

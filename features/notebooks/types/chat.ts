@@ -23,8 +23,15 @@ export interface SendMessageInput {
   documents: RetrievedContext;
 }
 
+export interface AIChatMessage {
+  type: "text" | "image";
+  content?: string;
+  caption?: string;
+  image_path?: string;
+}
+
 export interface AIResponse {
-  response: string;
+  messages: AIChatMessage[];
   citations: string[];
   recommendations: string[];
 }
