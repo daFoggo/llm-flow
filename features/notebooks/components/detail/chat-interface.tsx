@@ -165,27 +165,20 @@ const ConversationManagementCardContent = ({
 }: ConversationManagementCardContentProps) => {
   const [messages, setMessages] = useState<MessageType[]>(INITIAL_MESSAGES);
   const [text, setText] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Retrieve Action
-  const { executeAsync: retrieve, status: retrieveStatus } = useAction(
-    retrieveContextAction
-  );
+  const { executeAsync: retrieve } = useAction(retrieveContextAction);
 
   // History Action
-  const { executeAsync: getHistory, status: historyStatus } = useAction(
-    getNotebookHistoryAction
-  );
+  const { executeAsync: getHistory } = useAction(getNotebookHistoryAction);
 
   // Send Message Action
-  const { executeAsync: sendMessage, status: sendStatus } =
-    useAction(sendMessageAction);
+  const { executeAsync: sendMessage } = useAction(sendMessageAction);
 
-  const isLoading =
-    retrieveStatus === "executing" ||
-    sendStatus === "executing" ||
-    historyStatus === "executing";
+  const isLoading = isProcessing;
 
   const handleSubmit = async (message: PromptInputMessage) => {
     if (!message.text.trim()) return;
@@ -197,6 +190,9 @@ const ConversationManagementCardContent = ({
       return;
     }
 
+    // Set processing state immediately
+    setIsProcessing(true);
+
     // 1. Optimistically update UI with User Message
     const userMsgId = Date.now().toString();
     const newUserMsg: MessageType = {
@@ -207,6 +203,13 @@ const ConversationManagementCardContent = ({
     flushSync(() => {
       setMessages((prev) => [...prev, newUserMsg]);
       setText("");
+    });
+
+    // Immediately scroll to bottom after adding user message
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     });
 
     try {
@@ -318,6 +321,8 @@ const ConversationManagementCardContent = ({
     } catch (error) {
       console.error("Chat error:", error);
       toast.error("An error occurred while processing your request.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -365,7 +370,9 @@ const ConversationManagementCardContent = ({
                         return showCitations ? (
                           <InlineCitation key={part.id || index}>
                             <div className="transition-colors group-hover:bg-accent inline-block">
-                              <MessageResponse>{part.content}</MessageResponse>
+                              <MessageResponse mode="static">
+                                {part.content}
+                              </MessageResponse>
                             </div>
                             <InlineCitationCard>
                               <InlineCitationCardTrigger
@@ -398,7 +405,7 @@ const ConversationManagementCardContent = ({
                             </InlineCitationCard>
                           </InlineCitation>
                         ) : (
-                          <MessageResponse key={part.id || index}>
+                          <MessageResponse key={part.id || index} mode="static">
                             {part.content}
                           </MessageResponse>
                         );
@@ -422,7 +429,9 @@ const ConversationManagementCardContent = ({
                     })}
                   </div>
                 ) : (
-                  <MessageResponse>{msg.content as string}</MessageResponse>
+                  <MessageResponse mode="static">
+                    {msg.content as string}
+                  </MessageResponse>
                 )}
               </MessageContent>
               {msg.role === "assistant" && (

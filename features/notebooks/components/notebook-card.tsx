@@ -2,7 +2,6 @@
 
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { deleteNotebookAction } from "../actions/notebooks.action";
+import { useNotebooks } from "../hooks/use-notebooks";
 import type { Notebook } from "../types/notebooks";
 
 interface NotebookCardProps {
@@ -42,7 +42,7 @@ interface NotebookCardProps {
 }
 export const NotebookCard = ({ notebook }: NotebookCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const router = useRouter();
+  const { mutate } = useNotebooks();
 
   const { execute: executeDelete, status: deleteStatus } = useAction(
     deleteNotebookAction,
@@ -50,7 +50,7 @@ export const NotebookCard = ({ notebook }: NotebookCardProps) => {
       onSuccess: ({ data }) => {
         if (data?.status === "deleted") {
           toast.success("Notebook deleted successfully");
-          router.refresh();
+          mutate();
         }
         setShowDeleteDialog(false);
       },

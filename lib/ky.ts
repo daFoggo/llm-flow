@@ -3,7 +3,7 @@ import { BACKEND_API } from "@/configs/env";
 
 export const kyClient = ky.create({
   prefixUrl: BACKEND_API,
-  timeout: 100_000,
+  timeout: 600_000,
   retry: {
     limit: 2,
     methods: ["get", "post", "put"],

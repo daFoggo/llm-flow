@@ -24,15 +24,12 @@ export const useNotebooks = (initialNotebooks?: Notebook[]) => {
     return ["notebooks", previousPageData[previousPageData.length - 1].id];
   };
 
-  const { data, size, setSize, isLoading, isValidating } = useSWRInfinite(
-    getKey,
-    fetcher,
-    {
+  const { data, size, setSize, isLoading, isValidating, mutate } =
+    useSWRInfinite(getKey, fetcher, {
       fallbackData: initialNotebooks ? [initialNotebooks] : undefined,
       revalidateFirstPage: false,
       revalidateOnFocus: true,
-    }
-  );
+    });
 
   const notebooks = data ? data.flat() : [];
   const isLoadingMore =
@@ -50,5 +47,6 @@ export const useNotebooks = (initialNotebooks?: Notebook[]) => {
     isValidating,
     isEmpty,
     loadMore,
+    mutate,
   };
 };

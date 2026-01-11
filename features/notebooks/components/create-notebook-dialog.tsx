@@ -30,10 +30,12 @@ import {
 } from "@/components/ui/file-upload";
 import { Spinner } from "@/components/ui/spinner";
 import { createNotebookAction } from "../actions/notebooks.action";
+import { useNotebooks } from "../hooks/use-notebooks";
 
 export const CreateNotebookDialog = () => {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const { mutate } = useNotebooks();
   const [isUploading, setIsUploading] = useState(false);
 
   const { execute, status } = useAction(createNotebookAction, {
@@ -51,6 +53,7 @@ export const CreateNotebookDialog = () => {
         } else {
           toast.success("Notebook created successfully");
         }
+        mutate();
       }
       setOpen(false);
       setFiles([]);
