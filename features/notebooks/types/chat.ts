@@ -24,6 +24,7 @@ export interface SendMessageInput {
 }
 
 export interface AIChatMessage {
+  id?: string;
   type: "text" | "image";
   content?: string;
   caption?: string;

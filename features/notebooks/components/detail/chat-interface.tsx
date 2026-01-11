@@ -9,6 +9,7 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
+import { nanoid } from "nanoid";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
@@ -36,12 +37,12 @@ import {
   InlineCitationCarouselNext,
   InlineCitationCarouselPrev,
   InlineCitationSource,
-  InlineCitationText,
 } from "@/components/ai-elements/inline-citation";
 import {
   Message,
   MessageAction,
   MessageActions,
+  MessageAttachment,
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
@@ -66,6 +67,7 @@ import {
   retrieveContextAction,
   sendMessageAction,
 } from "../../actions/chat.action";
+import type { AIChatMessage } from "../../types/chat";
 import { ResponsiveBlock } from "./responsive-block";
 
 type ChatInterfaceProps = {
@@ -129,19 +131,25 @@ export const ChatInterface = ({
 };
 
 // Start with standard welcome message
-const INITIAL_MESSAGES = [
+const INITIAL_MESSAGES: MessageType[] = [
   {
     id: "welcome",
-    role: "assistant" as const,
-    content:
-      "Hello! I'm your AI assistant. I can help you analyze documents, answer questions, and assist with your tasks. How can I help you today?",
+    role: "assistant",
+    content: [
+      {
+        id: "welcome-message-content",
+        type: "text",
+        content:
+          "Hello! I'm your AI assistant. I can help you analyze documents, answer questions, and assist with your tasks. How can I help you today?",
+      },
+    ],
   },
 ];
 
 type MessageType = {
   id: string;
   role: "assistant" | "user";
-  content: string;
+  content: string | AIChatMessage[];
   citations?: string[];
   recommendations?: string[];
 };
@@ -159,8 +167,6 @@ const ConversationManagementCardContent = ({
   const [text, setText] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // useSources(notebookId); // Hook call kept for potential future use or cache invalidation, though currently unused in this component logic.
 
   // Retrieve Action
   const { executeAsync: retrieve, status: retrieveStatus } = useAction(
@@ -236,20 +242,13 @@ const ConversationManagementCardContent = ({
       const data = aiResult.data;
 
       // 4. Update UI with AI Response
-      const aiResponseMessages = data.messages;
-      const newMessages: MessageType[] = [];
+      // Function to process partial paths to full URLs
+      const processContent = (content: string) => {
+        if (!content || !BACKEND_IP) return content;
 
-      aiResponseMessages.forEach((msg, index) => {
-        let content = "";
-        if (msg.type === "text") {
-          content = msg.content || "";
-        } else if (msg.type === "image") {
-          content = `![${msg.caption || "Image"}](${msg.image_path})`;
-        }
-
-        if (BACKEND_IP) {
-          // Replace localhost:8000 and localhost:4000
-          content = content
+        let processed = content;
+        if (processed.includes("](http://localhost")) {
+          processed = processed
             .replace(
               /\]\(http:\/\/localhost:8000\/static\//g,
               `](${BACKEND_IP}/static/`
@@ -263,27 +262,59 @@ const ConversationManagementCardContent = ({
               `](${BACKEND_IP}/static/`
             );
         }
+        return processed;
+      };
 
-        // Fix newlines in markdown image alt text which breaks standard parsers
-        content = content.replace(/!\[([^\]]*)\]/g, (_match, altText) => {
-          return `![${altText.replace(/\n/g, " ")}]`;
-        });
+      // Process image paths in the message parts
+      const processedMessages = data.messages.map((msg) => {
+        const partWithId = { ...msg, id: nanoid() };
 
-        const isLastMessage = index === aiResponseMessages.length - 1;
-        const aiMsgId = (Date.now() + index + 1).toString();
+        if (partWithId.type === "image" && partWithId.image_path) {
+          let imagePath = partWithId.image_path;
 
-        newMessages.push({
-          id: aiMsgId,
-          role: "assistant",
-          content: content,
-          citations: isLastMessage ? data.citations : undefined,
-          recommendations: isLastMessage
-            ? data.recommendations
-            : undefined,
-        });
+          if (BACKEND_IP) {
+            // Regex to check if path starts with http/https
+            const isAbsolute = /^https?:\/\//i.test(imagePath);
+
+            if (isAbsolute) {
+              // Convert localhost to BACKEND_IP if needed
+              if (imagePath.includes("localhost:8000")) {
+                imagePath = imagePath.replace(
+                  "localhost:8000",
+                  new URL(BACKEND_IP).host
+                );
+              } else if (imagePath.includes("localhost:4000")) {
+                imagePath = imagePath.replace(
+                  "localhost:4000",
+                  new URL(BACKEND_IP).host
+                );
+              }
+            } else {
+              // Path is relative, prepend BACKEND_IP
+              // Strip leading / or static/ to ensure clean joining
+              const cleanPath = imagePath.replace(/^\/?(static\/)?/, "");
+              imagePath = `${BACKEND_IP}/static/${cleanPath}`;
+            }
+          }
+          return { ...partWithId, image_path: imagePath };
+        }
+        if (partWithId.type === "text" && partWithId.content) {
+          return { ...partWithId, content: processContent(partWithId.content) };
+        }
+        return partWithId;
       });
 
-      setMessages((prev) => [...prev, ...newMessages]);
+      const aiMsgId = (Date.now() + 1).toString();
+
+      const newAiMessage: MessageType = {
+        id: aiMsgId,
+        role: "assistant",
+        content: processedMessages,
+        citations: data.citations,
+        recommendations: data.recommendations,
+      };
+
+      setMessages((prev) => [...prev, newAiMessage]);
     } catch (error) {
       console.error("Chat error:", error);
       toast.error("An error occurred while processing your request.");
@@ -318,38 +349,80 @@ const ConversationManagementCardContent = ({
                     <span>AI Assistant</span>
                   </div>
                 )}
-                {/* Content with conditional inline citations */}
-                {msg.citations && msg.citations.length > 0 ? (
-                  <InlineCitation>
-                    <InlineCitationText>{msg.content}</InlineCitationText>
-                    <InlineCitationCard>
-                      <InlineCitationCardTrigger sources={msg.citations} />
-                      <InlineCitationCardBody>
-                        <InlineCitationCarousel>
-                          <InlineCitationCarouselContent>
-                            {msg.citations.map((citation, index) => (
-                              <InlineCitationCarouselItem key={citation}>
-                                <InlineCitationSource
-                                  title={`Source ${index + 1}`}
-                                  url={citation}
-                                  description="Citation details unavilable yet."
-                                />
-                              </InlineCitationCarouselItem>
-                            ))}
-                          </InlineCitationCarouselContent>
-                          <InlineCitationCarouselHeader>
-                            <InlineCitationCarouselIndex />
-                            <div className="flex items-center gap-1">
-                              <InlineCitationCarouselPrev />
-                              <InlineCitationCarouselNext />
+
+                {/* Render Content based on type */}
+                {Array.isArray(msg.content) ? (
+                  <div className="flex flex-col gap-4 w-full">
+                    {msg.content.map((part, index) => {
+                      if (part.type === "text" && part.content) {
+                        const isLastPart =
+                          index === (msg.content as AIChatMessage[]).length - 1;
+                        const showCitations =
+                          isLastPart &&
+                          msg.citations &&
+                          msg.citations.length > 0;
+
+                        return showCitations ? (
+                          <InlineCitation key={part.id || index}>
+                            <div className="transition-colors group-hover:bg-accent inline-block">
+                              <MessageResponse>{part.content}</MessageResponse>
                             </div>
-                          </InlineCitationCarouselHeader>
-                        </InlineCitationCarousel>
-                      </InlineCitationCardBody>
-                    </InlineCitationCard>
-                  </InlineCitation>
+                            <InlineCitationCard>
+                              <InlineCitationCardTrigger
+                                sources={msg.citations || []}
+                              />
+                              <InlineCitationCardBody>
+                                <InlineCitationCarousel>
+                                  <InlineCitationCarouselContent>
+                                    {msg.citations?.map((citation, cIndex) => (
+                                      <InlineCitationCarouselItem
+                                        key={citation}
+                                      >
+                                        <InlineCitationSource
+                                          title={`Source ${cIndex + 1}`}
+                                          url={citation}
+                                          description="Citation details unavailable yet."
+                                        />
+                                      </InlineCitationCarouselItem>
+                                    ))}
+                                  </InlineCitationCarouselContent>
+                                  <InlineCitationCarouselHeader>
+                                    <InlineCitationCarouselIndex />
+                                    <div className="flex items-center gap-1">
+                                      <InlineCitationCarouselPrev />
+                                      <InlineCitationCarouselNext />
+                                    </div>
+                                  </InlineCitationCarouselHeader>
+                                </InlineCitationCarousel>
+                              </InlineCitationCardBody>
+                            </InlineCitationCard>
+                          </InlineCitation>
+                        ) : (
+                          <MessageResponse key={part.id || index}>
+                            {part.content}
+                          </MessageResponse>
+                        );
+                      }
+
+                      if (part.type === "image" && part.image_path) {
+                        return (
+                          <MessageAttachment
+                            key={part.id || index}
+                            data={{
+                              type: "file",
+                              url: part.image_path,
+                              mediaType: "image/png",
+                              filename: part.caption || "Image",
+                            }}
+                            className="w-full max-w-sm h-auto aspect-video rounded-lg border bg-muted"
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
                 ) : (
-                  <MessageResponse>{msg.content}</MessageResponse>
+                  <MessageResponse>{msg.content as string}</MessageResponse>
                 )}
               </MessageContent>
               {msg.role === "assistant" && (
@@ -357,7 +430,12 @@ const ConversationManagementCardContent = ({
                   <MessageAction
                     tooltip="Copy response"
                     onClick={() => {
-                      navigator.clipboard.writeText(msg.content);
+                      const contentToCopy = Array.isArray(msg.content)
+                        ? msg.content
+                            .map((c) => c.content || c.caption || "")
+                            .join("\n")
+                        : msg.content;
+                      navigator.clipboard.writeText(contentToCopy as string);
                       toast.success("Copied to clipboard");
                     }}
                   >
@@ -412,12 +490,6 @@ const ConversationManagementCardContent = ({
               ref={textareaRef}
               value={text}
               placeholder="Ask a question..."
-              // Disable if no sources (unless we allow chatting without context?)
-              // Requirement says "retieve context... from selected docs".
-              // If no docs, maybe it searches global or fails.
-              // Let's allow chatting but maybe warn if no sources?
-              // The API says "docs_ids: (Optional) ... If null/empty will find on all db (not encouraged)"
-              // So we should probably allow it but maybe prefer sources.
               disabled={isLoading}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

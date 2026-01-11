@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/performance/noImgElement: <idk> */
 "use client";
 
 import type { FileUIPart, UIMessage } from "ai";
@@ -7,7 +8,6 @@ import {
   PaperclipIcon,
   XIcon,
 } from "lucide-react";
-import Image from "next/image";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
@@ -19,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { BACKEND_IP } from "@/configs/env";
 import { cn } from "@/lib/utils";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -312,9 +311,6 @@ export const MessageResponse = memo(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
-      // @ts-expect-error
-      allowedImagePrefixes={["*"]}
-      defaultOrigin={BACKEND_IP}
       {...props}
     />
   ),
@@ -351,7 +347,7 @@ export function MessageAttachment({
     >
       {isImage ? (
         <>
-          <Image
+          <img
             alt={filename || "attachment"}
             className="size-full object-cover"
             height={100}
